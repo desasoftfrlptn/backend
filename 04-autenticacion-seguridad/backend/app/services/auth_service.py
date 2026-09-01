@@ -1,29 +1,29 @@
 """
 Capa de negocio (Service) — los casos de uso de autenticación.
 
-COMPLETÁ los métodos marcados con TODO. El service aplica las reglas de
-negocio y delega el acceso a datos en el repository.
+El service aplica las reglas de negocio y delega el acceso a datos en el
+repository. Dos decisiones clave:
 
-LAS DECISIONES CLAVE DE HOY (leelas antes de codear):
-
-    1. ¿Dónde se hashea la contraseña? → ACÁ (en el service), no en el
-       controller ni en el repository. Hashear es una regla de negocio:
+    1. ¿Dónde se hashea la contraseña? → ACÁ. Hashear es una regla de negocio:
        "todo usuario que se crea, se crea con su contraseña protegida".
 
-    2. ¿El service devuelve un 401/409? → NO. El service NO sabe de HTTP.
-       Devuelve `None` para decir "no se pudo" y el controller decide qué
-       status code corresponde. Igual que el 404 del Módulo 03.
+    2. ¿El service devuelve un 401/409? → NO. Devuelve `None` para decir "no
+       se pudo" y el controller decide el status code. Igual que el 404 del 03.
 
-    3. Timing attack / user enumeration (bonus 🎯): si en el login
-       respondés distinto según si el email existe o no, le estás dando al
-       atacante una forma de averiguar qué emails están registrados. Por eso
-       el login ante "usuario inexistente" y ante "contraseña incorrecta"
-       debe tardar lo MISMO y devolver el MISMO mensaje.
+    3. Timing attack / user enumeration: para que "email inexistente" y
+       "contraseña incorrecta" tarden lo MISMO (evitando que un atacante mida
+       la diferencia y adivine emails), cuando el usuario no existe igual
+       verificamos contra un hash falso. Así el costo de Argon2 siempre corre.
 """
 
 from app.models.user import User, UserCreate
 from app.repositories.user_repository import UserRepository
 from app.security import hash_password, verify_password
+
+# Un hash falso, calculado UNA vez al importar. Lo usamos en authenticate_user
+# para igualar el tiempo de respuesta cuando el usuario no existe (mitigación
+# del timing attack / user enumeration).
+_DUMMY_HASH = hash_password("dummy-password-for-timing")
 
 
 class AuthService:
@@ -36,38 +36,27 @@ class AuthService:
         """
         Registra un usuario nuevo. Devuelve el User creado, o None si el
         email ya está en uso.
-
-        Pasos (desarrollá cada uno):
-          1. Normalizá el email: `body.email.lower().strip()`.
-             (Es una regla de negocio: "los emails son case-insensitive".
-              Evita que "Juan@X.com" y "juan@x.com" sean dos cuentas.)
-          2. Si `repository.get_by_email(email)` devuelve algo → devolvé None.
-          3. Hasheá la contraseña con `hash_password(body.password)`.
-          4. Devolvé `repository.create(email, hashed)`.
         """
-        raise NotImplementedError("TODO: implementar register_user")
+        email = body.email.lower().strip()
+        if self.repository.get_by_email(email) is not None:
+            return None
+        hashed = hash_password(body.password)
+        return self.repository.create(email, hashed)
 
     def authenticate_user(self, email: str, password: str) -> User | None:
         """
         Verifica credenciales. Devuelve el User si son válidas, None si no.
-
-        Pasos:
-          1. Normalizá el email igual que en register.
-          2. Buscá el user: `user = self.repository.get_by_email(email)`.
-          3. Si `user is None` → devolvé None (no hay nada que verificar).
-          4. Si `verify_password(password, user.hashed_password)` es False
-             → devolvé None.
-          5. Devolvé el user.
-
-        🎯 Bonus (timing attack): si el usuario no existe, el paso 3 devuelve
-        al toque, y el paso 4 (que verifica un hash de Argon2, lento) ni
-        corre. Eso hace que "email inexistente" sea más RÁPIDO que
-        "contraseña mal", y un atacante puede medir la diferencia. Para
-        arreglarlo se verifica SIEMPRE contra un hash falso cuando el user
-        no existe, así el tiempo es constante. Investigá: ¿cómo lo harías?
-        (Pista: `hash_password("dummy")` una sola vez, y verificá contra eso.)
         """
-        raise NotImplementedError("TODO: implementar authenticate_user")
+        email = email.lower().strip()
+        user = self.repository.get_by_email(email)
+        if user is None:
+            # Mitigación del timing attack: verificamos contra un hash falso
+            # para que "email inexistente" tarde lo mismo que "contraseña mal".
+            verify_password(password, _DUMMY_HASH)
+            return None
+        if not verify_password(password, user.hashed_password):
+            return None
+        return user
 
     def count_users(self) -> int:
         # EJEMPLO resuelto — el health check usa este método.

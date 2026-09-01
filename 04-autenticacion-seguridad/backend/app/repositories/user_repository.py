@@ -1,17 +1,10 @@
 """
 Capa de datos (Repository) — acceso a la entidad User.
 
-COMPLETÁ los métodos marcados con TODO. Usá el ORM (SQLModel), igual que
-en el Módulo 03. Pensás en objetos (`User`), no en filas y columnas.
-
-Pistas rápidas (el GUIA_ALUMNO tiene las consignas completas):
-  - buscar por email → select(User).where(User.email == email) + .first()
-  - leer por id      → session.get(User, user_id)
-  - crear            → User(...) + session.add() + commit() + refresh()
-
-Recordá la lección del Módulo 03: el repository NO sabe de HTTP ni de
-reglas de negocio. Solo habla con la base. Devolvés `None` si no encontrás;
-el que decide qué significa eso (401, 409, 404) es la capa de arriba.
+Usamos el ORM (SQLModel). Pensamos en objetos (`User`), no en filas y
+columnas. El repository NO sabe de HTTP ni de reglas de negocio: solo habla
+con la base. Devuelve `None` si no encuentra; el que decide qué significa
+eso (401, 409) es la capa de arriba.
 """
 
 from sqlmodel import Session, select
@@ -26,33 +19,23 @@ class UserRepository:
         self.session = session
 
     def get_by_email(self, email: str) -> User | None:
-        """
-        Devuelve el usuario con ese email, o None si no existe.
-
-        Pista: `select(User).where(User.email == email)`, ejecutás con
-        `self.session.exec(...)` y usás `.first()` (no `.all()`) porque
-        querés UNO o None.
-        """
-        raise NotImplementedError("TODO: implementar get_by_email")
+        """Devuelve el usuario con ese email, o None si no existe."""
+        statement = select(User).where(User.email == email)
+        return self.session.exec(statement).first()
 
     def get_by_id(self, user_id: int) -> User | None:
-        """
-        Devuelve el usuario por id, o None si no existe.
-
-        Pista: el ORM tiene atajo — `self.session.get(User, user_id)`.
-        """
-        raise NotImplementedError("TODO: implementar get_by_id")
+        """Devuelve el usuario por id, o None si no existe."""
+        return self.session.get(User, user_id)
 
     def create(self, email: str, hashed_password: str) -> User:
-        """
-        Crea un usuario y devuelve la instancia persistida (con id y fecha).
-
-        Pista: `User(email=email, hashed_password=hashed_password)`, luego
-        `add()`, `commit()` y `refresh()` para traer id + created_at.
-        """
-        raise NotImplementedError("TODO: implementar create")
+        """Crea un usuario y devuelve la instancia persistida (con id y fecha)."""
+        user = User(email=email, hashed_password=hashed_password)
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        return user
 
     def count(self) -> int:
-        # EJEMPLO resuelto — te sirve de referencia (el health lo usa).
+        # EJEMPLO resuelto — el health check usa este método.
         statement = select(User)
         return len(self.session.exec(statement).all())

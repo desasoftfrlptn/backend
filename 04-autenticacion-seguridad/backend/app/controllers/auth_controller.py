@@ -1,16 +1,12 @@
 """
 Capa de presentación (Controller) — endpoints de AUTENTICACIÓN.
 
-COMPLETÁ los endpoints marcados con TODO. Acá viven:
   - POST /api/auth/register → crea un usuario (devuelve 201)
   - POST /api/auth/login    → verifica credenciales y devuelve un JWT
 
-El controller recibe el request, delega en el service y traduce el
-resultado a HTTP. NO hashea, NO habla con la base, NO verifica contraseñas:
-solo traduce `User`/`None` a status codes y JSON.
-
-MIRÁ `health_controller.py` (resuelto) para ver cómo recibir el service
-con `Depends(get_auth_service)`.
+El controller recibe el request, delega en el service y traduce el resultado
+a HTTP. NO hashea, NO habla con la base, NO verifica contraseñas: solo
+traduce `User`/`None` a status codes y JSON.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -28,12 +24,16 @@ def register(body: UserCreate, service: AuthService = Depends(get_auth_service))
     """
     POST /api/auth/register — crea un usuario.
 
-    - Si `service.register_user(body)` devuelve None → el email ya existe.
-      Traducilo a un `409 Conflict` (el recurso ya existe).
-    - Si devuelve un User → lo devolvés (FastAPI lo serializa con UserRead,
-      que NO incluye el hash).
+    Si el email ya existe, el service devuelve None → 409 Conflict.
+    Si no, devolvemos el User (FastAPI lo serializa con UserRead, sin hash).
     """
-    raise NotImplementedError("TODO: implementar register")
+    user = service.register_user(body)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El email ya está registrado",
+        )
+    return user
 
 
 @router.post("/login", response_model=Token)
@@ -41,14 +41,16 @@ def login(body: UserLogin, service: AuthService = Depends(get_auth_service)):
     """
     POST /api/auth/login — verifica credenciales y emite un JWT.
 
-    - Si `service.authenticate_user(body.email, body.password)` devuelve None
-      → credenciales inválidas. Devuelve un `401` con mensaje GENÉRICO:
-      "Email o contraseña incorrectos". NUNCA digas "el email no existe" o
-      "la contraseña es incorrecta" por separado: eso es user enumeration.
-    - Si devuelve un User → creá el token con
-      `create_access_token(str(user.id))` y devolvé `Token(access_token=..., token_type="bearer")`.
-
-    🧠 El `sub` del token es el ID del usuario (como string). Por eso en
-    `get_current_user` se hace `int(payload["sub"])`.
+    Mensaje GENÉRICO para ambos fallos ("Email o contraseña incorrectos"):
+    si dijéramos "el email no existe" vs "contraseña incorrecta", permitiríamos
+    user enumeration. Un solo mensaje genérico lo evita.
     """
-    raise NotImplementedError("TODO: implementar login")
+    user = service.authenticate_user(body.email, body.password)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email o contraseña incorrectos",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(str(user.id))
+    return Token(access_token=access_token, token_type="bearer")

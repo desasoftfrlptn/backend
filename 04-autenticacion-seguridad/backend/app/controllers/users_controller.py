@@ -1,10 +1,10 @@
 """
 Capa de presentación (Controller) — endpoints del usuario autenticado.
 
-COMPLETÁ el endpoint marcado con TODO. Acá viven las rutas que SOLO
-puede usar alguien autenticado. La magia está en `Depends(get_current_user)`:
-FastAPI ejecuta esa dependencia ANTES del endpoint; si falla (token inválido,
-expirado, o usuario inexistente), devuelve 401 y el endpoint ni corre.
+Acá viven las rutas que SOLO puede usar alguien autenticado. La magia está en
+`Depends(get_current_user)`: FastAPI ejecuta esa dependencia ANTES del
+endpoint; si falla (token inválido, expirado, o usuario inexistente), devuelve
+401 y el endpoint ni corre.
 """
 
 from fastapi import APIRouter, Depends
@@ -20,11 +20,10 @@ def read_me(current_user: User = Depends(get_current_user)):
     """
     GET /api/users/me — devuelve el usuario autenticado.
 
-    Fijate: NO recibe un id por la URL. El "quién" viene del TOKEN, resuelto
-    por `get_current_user`. Acá solo devolvés `current_user`.
+    No recibe un id por la URL: el "quién" viene del TOKEN, resuelto por
+    `get_current_user`. Acá solo devolvemos `current_user`.
 
-    🧠 Esta es la diferencia con el Módulo 03: antes cualquiera podía
-    `GET /api/tasks/{id}` y leer lo que quisiera. Ahora el server sabe quién
-    sos, y vos decidís qué devolverle.
+    Esta es la diferencia con el Módulo 03: antes cualquiera podía leer lo que
+    quisiera. Ahora el server sabe quién sos.
     """
-    raise NotImplementedError("TODO: implementar read_me")
+    return current_user

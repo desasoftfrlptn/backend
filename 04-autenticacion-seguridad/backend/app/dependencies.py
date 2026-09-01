@@ -1,17 +1,18 @@
 """
 Inyección de dependencias — el "cableado" entre capas + AUTENTICACIÓN.
 
-Como en el Módulo 03, acá CONECTAMOS las capas. Pero ahora agregamos una
-pieza nueva: la dependencia que PROTEGE rutas.
-
     get_session          → crea una Session por request
     get_user_repository  → recibe la Session, devuelve un repository
     get_auth_service     → recibe el repository, devuelve un service
     get_current_user     → recibe el token + el repository, devuelve el User
 
-La última es LA lección de hoy: cómo un endpoint sabe QUIÉN está hablando.
+`get_current_user` es LA lección de hoy: cómo un endpoint sabe QUIÉN está
+hablando. Es una dependencia: cualquier endpoint que la pida en `Depends()`
+queda protegido (si falla, el endpoint nunca se ejecuta).
 
-COMPLETÁ únicamente `get_current_user`. El resto ya viene cableado.
+El 401 vive acá, que es la capa HTTP. `decode_token` solo deja propagar la
+excepción del JWT; la traducción a status code la hacemos acá. Es EXACTAMENTE
+el mismo criterio que el 404 del Módulo 03.
 """
 
 from fastapi import Depends, HTTPException, status
@@ -25,9 +26,8 @@ from app.repositories.user_repository import UserRepository
 from app.security import decode_token
 from app.services.auth_service import AuthService
 
-# El "extractor" de tokens. Le dice a FastAPI: "buscá el token en el header
-# `Authorization: Bearer <token>`". El `tokenUrl` es la ruta del login (la
-# que emite tokens) — aparece en el botón "Authorize" del Swagger.
+# El "extractor" de tokens: busca el token en el header `Authorization: Bearer
+# <token>`. El `tokenUrl` es la ruta del login (aparece en "Authorize" del Swagger).
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
@@ -56,31 +56,22 @@ def get_current_user(
     """
     Protege una ruta: resuelve QUIÉN es el usuario a partir del token.
 
-    Es una dependencia: cualquier endpoint que la pida en `Depends()` queda
-    protegido (si falla, el endpoint nunca se ejecuta).
-
-    Pasos (desarrollá cada uno):
-      1. Intentá `payload = decode_token(token)`.
-      2. Si `decode_token` lanza un error (firma inválida, expirado...),
-         levantá un 401. Capturá la excepción del JWT con:
-             `from jwt import InvalidTokenError`  →  `except InvalidTokenError:`
-         El 401 debe incluir el header `WWW-Authenticate: Bearer` (lo pide
-         la especificación HTTP).
-      3. Sacá el `sub` del payload y convertilo a int: ese es el user id.
-         (En `create_access_token` guardaste el id como subject.)
-      4. Buscá el user: `repository.get_by_id(user_id)`.
-      5. Si no existe → 401 (token válido pero usuario borrado/inexistente).
-      6. Devolvé el user.
-
-    Pista de la exception:
-        credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    🧠 ¿Dónde vive el 401? Acá, que es la capa HTTP. `decode_token` solo
-    deja propagar la excepción del JWT; la traducción a status code la hacés
-    vos acá. Es EXACTAMENTE el mismo criterio que el 404 del Módulo 03.
+    - Decodifica el token; si falla (firma inválida, expirado) → 401.
+    - Extrae el `sub` (el user id) y busca el usuario.
+    - Si el usuario no existe (token válido pero usuario borrado) → 401.
     """
-    raise NotImplementedError("TODO: implementar get_current_user")
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Credenciales inválidas",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = decode_token(token)
+        user_id = int(payload["sub"])
+    except InvalidTokenError:
+        raise credentials_exception
+
+    user = repository.get_by_id(user_id)
+    if user is None:
+        raise credentials_exception
+    return user
