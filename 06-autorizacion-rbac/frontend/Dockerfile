@@ -5,6 +5,11 @@
 # alcanzable desde el host. El proxy hacia la API se configura con la
 # variable VITE_PROXY_TARGET (la define docker-compose.yml → backend:8000).
 #
+# TOOLCHAIN: pnpm vía corepack (incluido en Node) — la MISMA herramienta
+# del desarrollo local. La versión exacta la declara el campo
+# "packageManager" de package.json, así que lo que corre acá es idéntico
+# a lo que corre en tu máquina con `pnpm install`. No se usa npm.
+#
 # No toqués este archivo en la entrega: es infraestructura de la cátedra.
 # ──────────────────────────────────────────────────────────────────────────
 
@@ -12,10 +17,13 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-# pnpm se instala global con npm (viene con la imagen node).
-RUN npm install -g pnpm@9
+# corepack activa pnpm usando la versión de packageManager (sin prompts).
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
 
-COPY package.json pnpm-lock.yaml ./
+# Dependencias primero (capa cacheable): lockfile congelado → build reproducible.
+# pnpm-workspace.yaml trae la config de builds aprobados (esbuild, pnpm 10+).
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .

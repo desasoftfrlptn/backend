@@ -181,9 +181,10 @@ El repo ya trae la infraestructura lista — **no la modificás**:
 ```
 06-autorizacion-rbac/
 ├── docker-compose.yml       ✅ Dado (define backend + frontend como servicios)
-├── backend/Dockerfile       ✅ Dado (python:3.12-slim + uvicorn +0.0.0.0)
+├── backend/Dockerfile       ✅ Dado (python:3.12-slim + uv + uvicorn +0.0.0.0)
+├── backend/uv.lock          ✅ Dado (dependencias Python congeladas por uv)
 ├── backend/.dockerignore    ✅ Dado (excluye .venv, caches)
-├── frontend/Dockerfile      ✅ Dado (node:22-alpine + vite dev +0.0.0.0)
+├── frontend/Dockerfile      ✅ Dado (node:22-alpine + pnpm/corepack + vite dev +0.0.0.0)
 └── frontend/.dockerignore   ✅ Dado (excluye node_modules, dist)
 ```
 
@@ -226,17 +227,21 @@ expone el contenedor → **el flujo de verificación no cambia en nada.**
 | Herramienta | Para qué | Verificar |
 |-------------|----------|-----------|
 | **Docker Engine** (≥ 24) | contenedores de backend y frontend | `docker --version` |
-| **Docker Compose v2** | orquestar both servicios | `docker compose version` |
-| **uv** (≥ 0.5) | *alternativa* sin docker (backend) | `uv --version` |
-| **pnpm** (≥ 9) | *alternativa* sin docker (frontend) | `pnpm --version` |
-| Python ≥ 3.12 | *alternativa* sin docker (backend) | `python3 --version` |
+| **Docker Compose v2** | orquestar los servicios | `docker compose version` |
+| **uv** (≥ 0.5) | toolchain Python: tu dev local Y el contenedor del backend | `uv --version` |
+| **pnpm** (≥ 9) | toolchain Node: tu dev local Y el contenedor del frontend | `pnpm --version` |
+| Python ≥ 3.12 | runtime del backend (lo maneja uv) | `python3 --version` |
 | **bash** | script de verificación (siempre) | `bash --version` |
 
-> Docker es el camino **requerido** de la entrega. `uv` + `pnpm` quedan como
-> alternativa local para desarrollar mientras no tenés docker — pero la
-> entrega se valida sobre `docker compose up --build`.
+> La toolchain es SIEMPRE la misma, adentro y afuera del contenedor: **uv**
+> dentro de la imagen del backend y **pnpm** (vía corepack) dentro de la del
+> frontend — exactamente lo que corre en tu máquina con `uv sync` y
+> `pnpm install`. El lockfile (`uv.lock` / `pnpm-lock.yaml`) congela las
+> versiones: lo que levanta `docker compose up --build` es idéntico a tu
+> entorno local. Esa es la portabilidad: docker no cambia las herramientas,
+> docker empaqueta las mismas.
 
-### Arrancar el backend (alternativa sin docker)
+### Arrancar el backend (desarrollo local)
 
 ```bash
 cd 06-autorizacion-rbac/backend
@@ -246,7 +251,7 @@ uv run -m app.main    # arranca en http://127.0.0.1:8000
 
 El dataset se siembra SOLO (no necesitás crear usuarios ni documentos).
 
-### Arrancar el frontend (alternativa sin docker)
+### Arrancar el frontend (desarrollo local)
 
 En **otra terminal** (el backend sigue corriendo en :8000):
 

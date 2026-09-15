@@ -525,9 +525,10 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
   entorno es parte del entregable. Declarado en un YAML versionable: corre
   en el aula, en tu casa, en CI. La cátedra va a levantar TU fork con docker
   compose — si no levanta, la entrega no arranca".
-  Si algún alumno no tiene Docker instalado: avisar que la alternativa uv/pnpm
+  Si algún alumno no tiene Docker instalado: avisar que el flujo local uv/pnpm
   sigue disponible para DESARROLLAR, pero la validación de la entrega es sobre
-  docker. El Dockerfile del frontend usa pnpm@9 — mismo lockfile, cero fricción.
+  docker. Los contenedores usan la MISMA toolchain que el dev local (uv en el
+  backend, pnpm vía corepack en el frontend) — cero fricción, mismo lockfile.
 -->
 
 ## Docker Compose — 🐳 el entorno, portátil
