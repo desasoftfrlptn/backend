@@ -432,7 +432,7 @@ el endpoint existe, el documento existe, y el server **no pregunta quién pide**
   es el CONTRATO, no la solución.
 -->
 
-<!-- _class: smaller -->
+<!-- _class: bigger -->
 
 ## La matriz (el corazón de la entrega)
 
