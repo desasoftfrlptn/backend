@@ -2,196 +2,146 @@
 marp: true
 theme: default
 paginate: true
-backgroundColor: #0f172a
-color: #e2e8f0
+backgroundColor: #ffffff
+color: #111827
 style: |
-  /* ---- Base ---- */
+  /* ---- Base: theme claro global (letras negras, fondo claro) ---- */
   section {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     padding: 36px 56px;
-    background-color: #0f172a;
-    color: #e2e8f0;
+    background-color: #ffffff;
+    color: #111827;
   }
-  h1 { color: #f8fafc; font-size: 1.55em; }
-  h2 { color: #f1f5f9; font-size: 1.25em; }
-  h3 { color: #94a3b8; font-size: 1em; }
-  h4 { color: #93c5fd; }
-  strong { color: #f1f5f9; }
-  em { color: #cbd5e1; }
-  a { color: #93c5fd; }
+  h1 { color: #111827; font-size: 1.55em; }
+  h2 { color: #1f2937; font-size: 1.25em; }
+  h3 { color: #374151; font-size: 1em; }
+  h4 { color: #1d4ed8; }
+  strong { color: #111827; }
+  em { color: #374151; }
+  a { color: #1d4ed8; }
 
   /* ---- Slides densas: reducimos todo un escalón ---- */
   section.smaller { font-size: 0.92em; }
   section.smaller h1 { font-size: 1.4em; }
   section.smaller h2 { font-size: 1.15em; }
 
-  /* ---- Slides claras (repaso 04/05): fondo claro + texto negro ---- */
-  section.light {
-    background-color: #ffffff;
-    color: #0f172a;
-  }
-  section.light h1, section.light h2, section.light h3, section.light h4 { color: #0f172a; }
-  section.light strong { color: #0f172a; }
-  section.light em { color: #334155; }
-  section.light a { color: #1d4ed8; }
-  section.light ul li, section.light ol li { color: #1e293b; }
-  section.light ul li::before { color: #1d4ed8; }
-
-  section.light code {
-    color: #be185d;
-    background: #f1f5f9;
-  }
-  section.light pre {
-    background: #ffffff;
-    border: 1px solid #d1d5db;
-    color: #383a42;
-  }
-  section.light pre code {
-    background: none;
-    color: #383a42;
-  }
-  section.light blockquote {
-    border-left: 4px solid #2563eb;
-    background: #f8fafc;
-  }
-  section.light blockquote p { color: #475569; }
-
-  section.light table { background: #ffffff; }
-  section.light thead { background: #f3f4f6; }
-  section.light th {
-    color: #0f172a;
-    border-bottom: 2px solid #2563eb;
-    background: #f3f4f6;
-  }
-  section.light td {
-    color: #1e293b;
-    border-bottom: 1px solid #e5e7eb;
-    background: #ffffff;
-  }
-  section.light tr:hover td { background: #f8fafc; }
-
-  /* Resaltado sintáctico sobre fondo claro (paleta One Light) */
-  section.light pre code :is(.hljs-keyword, .hljs-doctag, .hljs-template-tag, .hljs-template-variable, .hljs-variable.language_, .hljs-selector-tag) { color: #a626a4 !important; }
-  section.light pre code :is(.hljs-string, .hljs-regexp, .hljs-meta .hljs-string) { color: #50a14f !important; }
-  section.light pre code :is(.hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-name, .hljs-quote, .hljs-selector-pseudo) { color: #4078f2 !important; }
-  section.light pre code :is(.hljs-attr, .hljs-attribute, .hljs-literal, .hljs-meta, .hljs-selector-attr, .hljs-selector-class, .hljs-selector-id, .hljs-variable) { color: #986801 !important; }
-  section.light pre code :is(.hljs-number, .hljs-symbol) { color: #986801 !important; }
-  section.light pre code :is(.hljs-operator, .hljs-params, .hljs-subst, .hljs-type) { color: #383a42 !important; }
-  section.light pre code :is(.hljs-comment, .hljs-code, .hljs-formula) { color: #a0a1a7 !important; font-style: italic; }
-  section.light pre code :is(.hljs-section, .hljs-bullet) { color: #e45649 !important; font-weight: 700; }
-  section.light pre code .hljs-built_in { color: #c18401 !important; }
+  /* ---- Slides de repaso (3-5): texto más grande que el base ---- */
+  section.bigger { font-size: 1.05em; }
+  section.bigger h1 { font-size: 1.55em; }
+  section.bigger h2 { font-size: 1.35em; }
+  section.bigger table { font-size: 0.85em; }
 
   /* ---- Código ---- */
   code {
-    color: #93c5fd;
-    background: #1e293b;
+    color: #be185d;
+    background: #f1f5f9;
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.85em;
   }
   pre {
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: #f8fafc;
+    border: 1px solid #d1d5db;
     border-radius: 8px;
     padding: 10px 16px;
     font-size: 0.82em;
     line-height: 1.35;
-    color: #e2e8f0;
+    color: #383a42;
   }
   pre code {
     background: none;
     padding: 0;
-    color: #e2e8f0;
+    color: #383a42;
   }
 
-  /* ---- Resaltado sintáctico (paleta clara sobre fondo oscuro) ---- */
-  pre code :is(.hljs-keyword, .hljs-doctag, .hljs-template-tag, .hljs-template-variable, .hljs-variable.language_, .hljs-selector-tag) { color: #f472b6 !important; }
-  pre code :is(.hljs-string, .hljs-regexp, .hljs-meta .hljs-string) { color: #86efac !important; }
-  pre code :is(.hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-name, .hljs-quote, .hljs-selector-pseudo) { color: #7dd3fc !important; }
-  pre code :is(.hljs-attr, .hljs-attribute, .hljs-literal, .hljs-meta, .hljs-selector-attr, .hljs-selector-class, .hljs-selector-id, .hljs-variable) { color: #93c5fd !important; }
-  pre code :is(.hljs-number, .hljs-symbol) { color: #fcd34d !important; }
-  pre code :is(.hljs-operator, .hljs-params, .hljs-subst, .hljs-type) { color: #cbd5e1 !important; }
-  pre code :is(.hljs-comment, .hljs-code, .hljs-formula) { color: #94a3b8 !important; font-style: italic; }
-  pre code :is(.hljs-section, .hljs-bullet) { color: #f0abfc !important; font-weight: 700; }
-  pre code .hljs-built_in { color: #fca5a5 !important; }
+  /* ---- Resaltado sintáctico (paleta One Light) ---- */
+  pre code :is(.hljs-keyword, .hljs-doctag, .hljs-template-tag, .hljs-template-variable, .hljs-variable.language_, .hljs-selector-tag) { color: #a626a4 !important; }
+  pre code :is(.hljs-string, .hljs-regexp, .hljs-meta .hljs-string) { color: #50a14f !important; }
+  pre code :is(.hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-name, .hljs-quote, .hljs-selector-pseudo) { color: #4078f2 !important; }
+  pre code :is(.hljs-attr, .hljs-attribute, .hljs-literal, .hljs-meta, .hljs-selector-attr, .hljs-selector-class, .hljs-selector-id, .hljs-variable) { color: #986801 !important; }
+  pre code :is(.hljs-number, .hljs-symbol) { color: #986801 !important; }
+  pre code :is(.hljs-operator, .hljs-params, .hljs-subst, .hljs-type) { color: #383a42 !important; }
+  pre code :is(.hljs-comment, .hljs-code, .hljs-formula) { color: #a0a1a7 !important; font-style: italic; }
+  pre code :is(.hljs-section, .hljs-bullet) { color: #e45649 !important; font-weight: 700; }
+  pre code .hljs-built_in { color: #c18401 !important; }
 
   /* ---- Tablas ---- */
   table {
     font-size: 0.8em;
-    background: #1e293b;
+    background: #ffffff;
     border-radius: 8px;
     overflow: hidden;
     border-collapse: collapse;
     width: 100%;
   }
-  thead { background: #334155; }
+  thead { background: #f3f4f6; }
   th {
-    color: #93c5fd;
+    color: #111827;
     padding: 5px 10px;
     text-align: left;
-    border-bottom: 2px solid #3b82f6;
-    background: #334155;
+    border-bottom: 2px solid #2563eb;
+    background: #f3f4f6;
   }
   td {
-    color: #cbd5e1;
+    color: #1f2937;
     padding: 5px 10px;
-    border-bottom: 1px solid #334155;
-    background: #1e293b;
+    border-bottom: 1px solid #e5e7eb;
+    background: #ffffff;
   }
-  tr:hover td { background: #263348; }
+  tr:hover td { background: #f8fafc; }
 
   /* ---- Blockquote ---- */
   blockquote {
-    border-left: 4px solid #3b82f6;
-    background: #1e293b;
+    border-left: 4px solid #2563eb;
+    background: #f8fafc;
     padding: 8px 14px;
     border-radius: 0 8px 8px 0;
     margin: 8px 0;
   }
   blockquote p {
-    color: #94a3b8;
+    color: #475569;
     font-style: italic;
   }
 
   /* ---- Listas ---- */
   ul { list-style-type: none; padding-left: 0; }
-  ul li::before { content: "▸ "; color: #93c5fd; font-weight: bold; }
-  ul li { color: #cbd5e1; line-height: 1.5; }
-  ol li { color: #cbd5e1; line-height: 1.5; }
+  ul li::before { content: "▸ "; color: #1d4ed8; font-weight: bold; }
+  ul li { color: #1f2937; line-height: 1.5; }
+  ol li { color: #1f2937; line-height: 1.5; }
 
   /* ---- Lead slides ---- */
   section.lead h1 { font-size: 2.2em; }
-  section.lead p { color: #94a3b8; }
+  section.lead p { color: #374151; }
 
   /* ---- Fase ---- */
   section.fase {
-    background-color: #1e1b4b;
+    background-color: #eef2ff;
   }
-  section.fase h1 { color: #c4b5fd; font-size: 1.7em; }
-  section.fase h2 { color: #ddd6fe; }
+  section.fase h1 { color: #4338ca; font-size: 1.7em; }
+  section.fase h2 { color: #3730a3; }
 
   /* ---- Brecha (la lección central) ---- */
   section.brecha {
-    background-color: #2a1a1a;
+    background-color: #fef2f2;
   }
-  section.brecha h1 { color: #fca5a5; font-size: 1.7em; }
-  section.brecha h2 { color: #fecaca; }
-  section.brecha li, section.brecha p { color: #fecaca; }
+  section.brecha h1 { color: #b91c1c; font-size: 1.7em; }
+  section.brecha h2 { color: #991b1b; }
+  section.brecha li, section.brecha p { color: #7f1d1d; }
 
   /* ---- Entrega (la parte de evaluación) ---- */
   section.entrega {
-    background-color: #052e16;
+    background-color: #f0fdf4;
   }
-  section.entrega h1 { color: #34d399; font-size: 1.7em; }
-  section.entrega p, section.entrega li { color: #a7f3d0; }
+  section.entrega h1 { color: #15803d; font-size: 1.7em; }
+  section.entrega p, section.entrega li { color: #14532d; }
 
   /* ---- Bibliografía ---- */
   section.biblio {
-    background-color: #0b1220;
+    background-color: #eff6ff;
   }
-  section.biblio h1 { color: #93c5fd; font-size: 1.6em; }
-  section.biblio h2 { color: #c4b5fd; font-size: 1.05em; }
-  section.biblio li { font-size: 0.82em; line-height: 1.45; }
+  section.biblio h1 { color: #1d4ed8; font-size: 1.6em; }
+  section.biblio h2 { color: #4338ca; font-size: 1.05em; }
+  section.biblio li { font-size: 0.82em; line-height: 1.45; color: #1f2937; }
 
   /* ---- Footer ---- */
   footer { color: #64748b; font-size: 0.6em; }
@@ -250,7 +200,7 @@ En el 04 la API aprendió **quién sos**. Hoy la API aprende **qué podés hacer
 
 ---
 
-<!-- _class: smaller light -->
+<!-- _class: bigger -->
 <!-- note: |
   MINUTO 2-4 · REPASO CLASE 04 — 4 HITOS, 30 SEG CADA UNO
   Contexto: "En el 04 la API pasó de recibir cualquier request a saber quién
@@ -299,7 +249,7 @@ En el Módulo 04 la API pasó de recibir **cualquier request** a saber **quién 
 
 ---
 
-<!-- _class: smaller light -->
+<!-- _class: bigger -->
 <!-- note: |
   MINUTO 4-6 · REPASO CLASE 05 — LA TABLA DE LOS 7 VEHÍCULOS
   Avisar: "el 05 fue asincrónico, así que repasamos lo esencial: los 7
@@ -343,6 +293,7 @@ Y la frutilla: **rate limit** — 6 intentos fallidos → `429 Retry-After`.
 
 ---
 
+<!-- _class: bigger -->
 <!-- note: |
   MINUTO 6-8 · LAS 3 PREGUNTAS — LA PROMESA CUMPLIDA
   Esta es la slide que conecta TODO el recorrido del curso: traer la tabla
@@ -361,8 +312,6 @@ Y la frutilla: **rate limit** — 6 intentos fallidos → `429 Retry-After`.
   que RBAC (Role-Based Access Control) es el modelo de la clase y que la
   teoría se leyó en casa — acá se implementa en vivo.
 -->
-
-<!-- _class: smaller -->
 
 ## Las 3 preguntas (la promesa del Módulo 04)
 
