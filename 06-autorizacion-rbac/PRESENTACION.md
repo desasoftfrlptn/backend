@@ -566,7 +566,7 @@ bash scripts/verificar_authz.sh   # → 44 checks sobre localhost:8000
   QUÉ: "fork del repo de la cátedra + PR con los 4 archivos 🔓:
   dependencies.py, users_controller.py, documents_controller.py y authz.ts
   del frontend. El resto del repo NO se toca".
-  CUÁNDO: "miércoles 22/09 23:59 — no se recibe por ningún otro canal: ni
+  CUÁNDO: "martes 22/09 23:59 — no se recibe por ningún otro canal: ni
   mail, ni classroom, ni pendrive. Si el PR llega a las 23:59 con network
   timeout, es problema de cómo planificaron, no de la cátedra".
   CÓMO SE CORRIGE: "el script verificar_authz.sh (44 checks) + revisión de
@@ -585,7 +585,7 @@ bash scripts/verificar_authz.sh   # → 44 checks sobre localhost:8000
 
 - **Qué**: fork del repo de la cátedra + PR con los **4 archivos 🔓**
   (`dependencies.py`, `users_controller.py`, `documents_controller.py`, `authz.ts`)
-- **Cuándo**: antes del **miércoles 22/09 23:59** — no se recibe por otro canal
+- **Cuándo**: antes del **martes 22/09 23:59** — no se recibe por otro canal
 - **Cómo se corrige**: script `verificar_authz.sh` (**44 checks**) + revisión
   de código + **defensa oral de 5 min** en la clase siguiente
 - **Nota**: script 40% · código 30% · defensa oral 30%
