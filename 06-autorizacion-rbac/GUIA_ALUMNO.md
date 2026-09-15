@@ -8,7 +8,8 @@
 
 ## Cómo funciona esta entrega
 
-1. Tu **fork** trae el backend casi listo: solo completás **3 archivos**.
+1. Tu **fork** trae el backend casi listo: solo completás **4 archivos**
+   (3 de backend + 1 del frontend).
 2. Cada fase te lleva a un archivo, con consignas de descubrimiento.
 3. Al final de cada fase corrés el **script de verificación** y mirás qué
    checks se ponen verdes.
@@ -17,7 +18,8 @@
    que te ayudan a descubrirla.
 
 > 🎯 **Tu meta**: `bash scripts/verificar_authz.sh` → **44/44 checkpoints OK**,
-> y poder explicar cada 403 de tu código en la defensa oral.
+> la **consola del frontend coherente** con la matriz, y poder explicar
+> cada 403 de tu código en la defensa oral.
 
 ---
 
@@ -36,6 +38,9 @@
 │   ├── users_controller.py     ⬅️ FASE 2 (3 endpoints)
 │   └── documents_controller.py ⬅️ FASE 3 (6 endpoints)
 └── main.py              ✅ dado
+
+06-autorizacion-rbac/frontend/src/
+└── authz.ts             ⬅️ FASE 4b (6 helpers de autorización en la UI)
 ```
 
 ---
@@ -236,6 +241,70 @@ bash scripts/verificar_authz.sh
 
 ---
 
+## Fase 4b — Interfaz: alineá la UI con el server (frontend)
+
+> ⚠️ Ojo con el orden: esta fase NO la podés hacer antes de la Fase 3.
+> Primero el server tiene que responder los 403 reales; recién ahí la UI
+> tiene algo contra qué alinearse. (Si la hacés antes, vas a "arreglar"
+> la UI contra un server roto que responde 200 a todo — y cuando completes
+> el backend te va a temblar la mano igual que la defensa oral.)
+
+Levantá el frontend (terminal 2):
+
+```bash
+cd 06-autorizacion-rbac/frontend
+pnpm install
+pnpm dev
+```
+
+### La película de la alineación
+
+1. **Antes (backend roto)**: la UI te muestra TODO habilitado — vista del
+   viewer con botones de BORRAR y panel de USUARIOS. Clickleá: el server
+   (roto también) responde 200. **Todo verde en la consola. Todo inseguro.**
+   La UI "miente" igual que el server: ¡consistente!
+
+2. **Backend arreglado (Fase 3), helpers sin tocar**: el server ahora
+   responde 403 a lo que no corresponde... pero la UI SIGUE mostrando los
+   botones. Clickleá BORRAR como viewer → 403 rojo en la consola. Ahí
+   tenés la prueba viva: **ocultar un botón no es seguridad, y mostrarlo
+   sin server ya no es mentira posible.** La UI quedó rota contra un
+   server sano.
+
+3. **Completás `authz.ts`**: los botones que el server rechaza desaparecen
+   de la UI. Consola y matriz alineadas. La defensa oral te puede preguntar
+   por qué la UI replica la matriz — y tu respuesta tiene que ser "UX
+   honesta: no muestro una acción que el server va a rechazar, pero la
+   SEGURIDAD está en el server".
+
+### Qué completás
+
+Un solo archivo: `frontend/src/authz.ts`. Son 6 helpers; la UI entera
+(LoginPanel, DocumentsPanel, UsersPanel, ProberPanel) ya los usa:
+
+| Helper | Matriz (SPEC 3.4) |
+|--------|--------------------|
+| `scopeAllowsWrite` | el TOKEN contiene "write" |
+| `canManageUsers` | admin |
+| `canChangeRole` | admin |
+| `canDelete` | admin |
+| `canEdit` | dueño o admin |
+| `canPublish` | dueño o admin |
+
+> 🧠 **Truco de verificación**: cada helper tiene que devolver lo mismo que
+> responde el server. Probalo en el ProberPanel: el status HTTP vs. tu
+> helper. Si se contradicen, uno de los dos está roto. Descubrir cuál es
+> la mitad de la evaluación.
+
+### Verificá la fase
+
+```bash
+pnpm build   # typecheck + build de un SPA que compila limpio
+# y mirá la consola del frontend: 2xx verdes solo donde la matriz dice ✅
+```
+
+---
+
 ## Fase 4 — Defensa oral (definida por el resultado del script)
 
 Según el resultado de la verificación, se agenda tu defensa oral individual
@@ -247,7 +316,8 @@ Según el resultado de la verificación, se agenda tu defensa oral individual
    - ¿Por qué el rol se lee de storage y el scope del token?
    - ¿Por qué el 404 va antes que el 403?
 3. **Revisión de código**: con el resultado del script como guía, revisás
-   tus implementaciones de `require_role`, `require_scope` y el object-level.
+   tus implementaciones de `require_role`, `require_scope`, el object-level
+   y los helpers de `authz.ts`.
 
 > No memorices "la respuesta correcta". Entendé la PELÍCULA de un request:
 > quién lo autentica, quién decide el rol, quién decide el ownership,

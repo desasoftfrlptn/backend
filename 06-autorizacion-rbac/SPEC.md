@@ -30,7 +30,7 @@ Cuando termines, podrás explicar **con tu propio código**:
 
 ## 2 · Qué te dan (y qué NO modificás)
 
-El repo ya trae el backend casi listo. Solo modificás **3 archivos**:
+El repo ya trae el backend casi listo. Solo modificás **4 archivos**:
 
 ```
 06-autorizacion-rbac/backend/app/
@@ -47,9 +47,16 @@ El repo ya trae el backend casi listo. Solo modificás **3 archivos**:
 └── main.py              ✅ Dado
 ```
 
+Y **1 archivo del frontend** (React + TypeScript + Vite, la herramienta visual):
+
+```
+06-autorizacion-rbac/frontend/src/
+└── authz.ts             🔓 COMPLETÁS: 6 helpers de autorización en la UI
+```
+
 ---
 
-## 3 · La spec de tu entrega (qué tienen que hacer los 3 archivos)
+## 3 · La spec de tu entrega (qué tienen que hacer los 4 archivos)
 
 ### 3.1 `dependencies.py` — las dependencias de autorización
 
@@ -90,6 +97,35 @@ se lee del `token_payload` (lo fijó el login; es del TOKEN, no del usuario).
 | Público, mismo tenant | 200 ✅ | 200 ✅ | 200 ✅ |
 | Privado, propio | 200 ✅ | 200 ✅ | 200 (es tuyo) |
 | Privado de OTRO | 200 ✅ | 403 ❌ | 403 ❌ |
+
+### 3.4 `frontend/src/authz.ts` — la autorización en la INTERFAZ
+
+El frontend es una **herramienta de prueba** del backend: viene casi completo
+(login con 1 click, probador de la matriz, CRUD visual, consola de requests)
+y solo completás **1 archivo**: los helpers que la UI usa para mostrar u
+ocultar cada acción según la matriz.
+
+| Helper | Firma | Qué debe devolver (matriz) |
+|--------|-------|---------------------------|
+| `scopeAllowsWrite` | `(scope: string \| undefined) => boolean` | `true` solo si el scope del TOKEN contiene `"write"` |
+| `canManageUsers` | `(role: Role \| undefined) => boolean` | `true` solo para `"admin"` |
+| `canChangeRole` | `(role: Role \| undefined) => boolean` | `true` solo para `"admin"` |
+| `canDelete` | `(role: Role \| undefined) => boolean` | `true` solo para `"admin"` |
+| `canEdit` | `(userId, doc, role) => boolean` | `true` si `doc.owner_id === userId` **o** `role` es admin |
+| `canPublish` | `(userId, doc, role) => boolean` | `true` si `doc.owner_id === userId` **o** `role` es admin |
+
+**Regla de oro**: cada helper debe devolver lo que la **matriz del server**
+(SECCIONES 3.1-3.3) responde. La UI y el server tienen que quedar ALINEADOS:
+si la UI te muestra BORRAR pero el server responde 403, tu helper está roto
+(todavía devuelve `true`). Si la UI te oculta el botón pero el server
+responde 200, tu backend está roto. **La consola de requests lo hace
+visible.**
+
+> ⚠️ **Lección central**: ocultar un botón NO es seguridad. Estos helpers
+> son UX honesta — la seguridad REAL la decidís en el server. Si el server
+> está vulnerable (dependencies.py sin completar), la UI "dice que sí" y el
+> server (roto) también responde 200. Esa inconsistencia en vivo es EXACTAMENTE
+> lo que estás arreglando en este módulo.
 
 ---
 
@@ -133,7 +169,7 @@ se basan en él. **No renombres emails ni documentos** (podés agregar más).
 | Herramienta | Para qué | Verificar |
 |-------------|----------|-----------|
 | **uv** (≥ 0.5) | backend (pyproject.toml) | `uv --version` |
-| **pnpm** (nada) | NO necesitás frontend | — |
+| **pnpm** (≥ 9) | frontend (vite + react) | `pnpm --version` |
 | Python ≥ 3.12 | backend | `python3 --version` |
 | **bash** | script de verificación | `bash --version` |
 
@@ -146,6 +182,20 @@ uv run -m app.main    # arranca en http://127.0.0.1:8000
 ```
 
 El dataset se siembra SOLO (no necesitás crear usuarios ni documentos).
+
+### Arrancar el frontend
+
+En **otra terminal** (el backend sigue corriendo en :8000):
+
+```bash
+cd 06-autorizacion-rbac/frontend
+pnpm install
+pnpm dev                    # → http://localhost:5173
+```
+
+La interfaz te muestra los 4 usuarios demo con un click, el probador de
+la matriz por ID, el CRUD de documentos y la consola de requests. Mirá el
+`README.md` de esta carpeta para más detalles.
 
 ### Verificar tu trabajo
 
@@ -168,6 +218,8 @@ Si algún check falla, descontamos los puntos de cada celda rota.
 
 ### Lo que evalúa el código (30% de la nota)
 
+**Backend (20%)** — los 3 archivos de autorización:
+
 | Criterio | Qué miramos |
 |----------|------------|
 | **Deny-by-default** | Todo endpoint nuevo tiene dependencia de authz |
@@ -175,6 +227,14 @@ Si algún check falla, descontamos los puntos de cada celda rota.
 | **Tenancy en TODOS los endpoints** | No hay endpoint que olvide el filtro por tenant |
 | **Object-level en GET** | Mitigación de IDOR: owner o admin en documentos privados |
 | **Legibilidad** | Comentarios explicando POR QUÉ el 403, no solo el código |
+
+**Frontend (10%)** — los 6 helpers de `authz.ts`:
+
+| Criterio | Qué miramos |
+|----------|------------|
+| **Coherencia con la matriz** | Cada helper devuelva lo que la spec define para su celda |
+| **Scope en token** | `scopeAllowsWrite` lee el claim del JWT (no confunde con rol) |
+| **Owner + admin** | `canEdit` y `canPublish` distinguen dueño vs admin |
 
 ### La defensa oral (30% de la nota)
 
@@ -209,7 +269,12 @@ individual de **5 minutos** en la próxima clase presencial.
 
 1. **Fork** del repo base: `https://github.com/desasoftfrlptn/backend.git`
 2. Creá una rama con tu nombre: `git checkout -b tu-nombre/06-autorizacion-rbac`
-3. Commiteá SOLO la carpeta `06-autorizacion-rbac/backend/` (no toques los otros módulos)
+3. Commiteá la carpeta del backend **y** tu `authz.ts` del frontend:
+   ```bash
+   git add 06-autorizacion-rbac/backend/app/dependencies.py \
+           06-autorizacion-rbac/backend/app/controllers/ \
+           06-autorizacion-rbac/frontend/src/authz.ts
+   ```
 4. Hacé push a TU fork
 5. Abrí un **Pull Request** al repo base: título `"Entrega Módulo 06 — [Tu Nombre]"`
 6. En la descripción del PR pegá la salida de `verificar_authz.sh` (todos los ✅)
@@ -232,6 +297,9 @@ Estas son las que el docente espera escuchar:
 | Tenancy en endpoints de escritura | Un admin de Acme no borra documentos de Globex. |
 | `require_role` y `require_scope` como factories | Patrón reutilizable, no código inline en cada endpoint. |
 | Deny-by-default | Cualquier endpoint sin dependencia de authz es un bug. |
+| UI como proxy de la matriz | La UI replica la matriz con helpers (`authz.ts`), pero la
+| seguridad REAL la decide el server. Si el server está roto, la UI
+| "dice que sí" y el server también — el 200 aparece en la consola. |
 
 ---
 

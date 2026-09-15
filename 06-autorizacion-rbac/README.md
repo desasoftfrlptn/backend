@@ -40,20 +40,27 @@ Construís una **API de documentos** con:
 
 ### 2. Trabajo práctico (individual)
 
-Solo tenés que completar **3 archivos** en tu fork:
+Solo tenés que completar **4 archivos** (3 backend + 1 frontend):
 
 | Archivo | Qué completás |
 |---------|---------------|
 | `backend/app/dependencies.py` | `require_role` + `require_scope` |
 | `backend/app/controllers/users_controller.py` | Proteger 3 endpoints (admin + tenancy) |
 | `backend/app/controllers/documents_controller.py` | Proteger 6 endpoints (scope + IDOR + tenancy) |
+| `frontend/src/authz.ts` | 6 helpers de autorización en la UI (coherentes con la matriz) |
 
 ### 3. Levantá y verificá
 
 ```bash
+# Terminal 1 — backend
 cd backend
 uv sync
 uv run -m app.main                      # → http://127.0.0.1:8000
+
+# Terminal 2 — frontend (herramienta visual para probar la matriz)
+cd frontend
+pnpm install
+pnpm dev                                # → http://localhost:5173
 ```
 
 ```bash
@@ -87,6 +94,9 @@ sabés exactamente qué caso de abuso dejaste abierto.
 │   ├── app/                  # 3 archivos a completar (🔓)
 │   ├── pyproject.toml        # dependencias (uv)
 │   └── .env.example
+├── frontend/
+│   ├── src/authz.ts          # 🔓 1 archivo a completar (helpers autorización)
+│   └── ...                   # todo lo demás dado (herramienta de prueba)
 ├── postman/
 │   └── 06-autorizacion-rbac.postman_collection.json
 └── scripts/
