@@ -28,7 +28,8 @@
 ```
 06-autorizacion-rbac/backend/app/
 ├── models.py            ✅ dado
-├── storage.py           ✅ dado (dataset: 2 tenants, 4 users, 5 docs)
+├── db.py                ✅ dado (engine + tablas SQLModel, PostgreSQL)
+├── storage.py           ✅ dado (seed idempotente: 2 tenants, 4 users, 5 docs)
 ├── config.py            ✅ dado
 ├── security.py          ✅ dado (hash + JWT con claims role/tenant/scope)
 ├── auth_common.py       ✅ dado (verify_login)

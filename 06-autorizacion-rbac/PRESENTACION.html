@@ -3167,6 +3167,7 @@ footer { color: #64748b; font-size: 0.6em; }
 </table>
 <p><strong>Implementación (40 seg) — ya está en el repo, no se modifica</strong>:</p>
 <pre is="marp-pre" data-auto-scaling="downscale-only"><code class="language-bash">docker compose up --build
+<span class="hljs-comment"># postgres → localhost:5432  ·  volumen pgdata (persistencia)</span>
 <span class="hljs-comment"># backend  → http://localhost:8000   ·   healthcheck en /api/health</span>
 <span class="hljs-comment"># frontend → http://localhost:5173   ·   proxy /api → backend:8000</span>
 </code></pre>
@@ -4232,23 +4233,26 @@ footer { color: #64748b; font-size: 0.6em; }
      máquina ni depende de lo que tengas instalado&quot;. Analogy: el departamento
      terminado según el plano — igual en cualquier edificio.
   3) COMPOSE: &quot;el orquestador: un solo YAML que declara TODOS los servicios
-     (backend + frontend), sus puertos y sus relaciones, y un comando lo
-     levanta todo&quot;. Analogy: el contratista general.
+     (postgres + backend + frontend), sus puertos, sus relaciones y un
+     comando lo levanta todo&quot;. Analogy: el contratista general.
   IMPLEMENTACIÓN (40 segundos):
   - El repo ya trae docker-compose.yml + los 2 Dockerfiles → NO se modifican
-    en la entrega (son infra de la cátedra, como storage.py).
-  - &quot;Un comando: docker compose up --build. Backend en :8000, frontend en
-    :5173. El healthcheck del compose espera a que el backend esté sano antes
-    de levantar el frontend&quot;.
+    en la entrega (son infra de la cátedra, como storage.py y db.py).
+  - &quot;Un comando: docker compose up --build. Postgres en :5432 con un volumen
+    (pgdata — la PERSISTENCIA: los usuarios y roles viven en la base y
+    sobreviven a reinicios). Backend en :8000, frontend en :5173. El
+    healthcheck del compose espera a que postgres esté sano antes de
+    levantar el backend, y al backend antes de levantar el frontend&quot;.
   - &quot;El script de verificación corre IGUAL, desde el host, contra :8000 —
     el puerto del contenedor es el mismo puerto de siempre&quot;.
   POR QUÉ (15 segundos, con la slide del blockquote): &quot;portabilidad = el
   entorno es parte del entregable. Declarado en un YAML versionable: corre
   en el aula, en tu casa, en CI. La cátedra va a levantar TU fork con docker
   compose — si no levanta, la entrega no arranca&quot;.
-  Si algún alumno no tiene Docker instalado: avisar que la alternativa uv/pnpm
+  Si algún alumno no tiene Docker instalado: avisar que el flujo local uv/pnpm
   sigue disponible para DESARROLLAR, pero la validación de la entrega es sobre
-  docker. El Dockerfile del frontend usa pnpm@9 — mismo lockfile, cero fricción.</p></div><div class="bespoke-marp-note" data-index="10" tabindex="0"><p>note: |
+  docker. Los contenedores usan la MISMA toolchain que el dev local (uv en el
+  backend, pnpm vía corepack en el frontend) — cero fricción, mismo lockfile.</p></div><div class="bespoke-marp-note" data-index="10" tabindex="0"><p>note: |
   MINUTO 13-14 · LA ENTREGA — LEER LOS NÚMEROS EN VOZ ALTA Y DESPACIO
   Cambio de tono: esto define la nota de la materia en la parte de seguridad.
   QUÉ: &quot;fork del repo de la cátedra + PR con los 4 archivos 🔓:
