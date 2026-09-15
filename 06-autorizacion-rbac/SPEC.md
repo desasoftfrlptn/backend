@@ -1,0 +1,241 @@
+# 📘 SPEC — Módulo 06: Autorización RBAC (entrega obligatoria)
+
+> **Entrega obligatoria** para la materia Desarrollo de Software 2026.
+> **Fecha límite**: martes 22 de septiembre de 2026.
+> **Modalidad**: fork del repo de la cátedra, trabajo individual, defensa oral.
+
+---
+
+## 1 · Qué construís
+
+Sobre el backend del Módulo 05 (7 métodos de autenticación + JWT), agregás la
+**capa de AUTORIZACIÓN** con autorización:
+
+- **3 dependencias reutilizables**: `get_current_user` (ya hecho), `require_role`,
+  `require_scope`.
+- **6 endpoints de documentos** protegidos: CRUD + publicación.
+- **3 endpoints de usuarios** protegidos: solo admin de la empresa puede verlos.
+- **Multi-tenancy**: 2 empresas demo; cada una ve solo la suya.
+- **Object-level access control**: un editor no ve el documento privado de otro (IDOR mitigado).
+- **Scopes en el JWT**: el scope del token limita qué puede hacer este token.
+
+### Para qué lo construís (la lección)
+
+Cuando termines, podrás explicar **con tu propio código**:
+- Por qué `viewer@acme.com` recibe 403 al intentar ver el documento #2 de `admin@acme.com`.
+- Por qué el idem admin logueado con scope `"read"` recibe 403 al crear documento.
+- Por qué un admin de Globex no puede ver los usuarios de Acme aunque sea admin.
+
+---
+
+## 2 · Qué te dan (y qué NO modificás)
+
+El repo ya trae el backend casi listo. Solo modificás **3 archivos**:
+
+```
+06-autorizacion-rbac/backend/app/
+├── models.py            ✅ Dado: Role, User, Document, LoginBody, DocumentCreate...
+├── storage.py           ✅ Dado: 2 tenants + 4 users + 5 docs (seed)
+├── config.py            ✅ Dado: SECRET_KEY fail-loud, ALGORITHM
+├── security.py          ✅ Dado: hash Argon2 + JWT con claims role/tenant/scope
+├── auth_common.py       ✅ Dado: verify_login (con timing attack)
+├── auth_controller.py   ✅ Dado: register + login (con scope)
+├── dependencies.py      🔓 COMPLETÁS: require_role + require_scope
+├── controllers/
+│   ├── users_controller.py     🔓 COMPLETÁS: 3 endpoints
+│   └── documents_controller.py 🔓 COMPLETÁS: 6 endpoints
+└── main.py              ✅ Dado
+```
+
+---
+
+## 3 · La spec de tu entrega (qué tienen que hacer los 3 archivos)
+
+### 3.1 `dependencies.py` — las dependencias de autorización
+
+| Dependencia | Estado | Qué hace |
+|-------------|--------|----------|
+| `get_current_user` | ✅ Ya resuelto | Decodifica el JWT (401 si inválido). Guarda el payload en `request.state`. |
+| `require_role(rol)` | 🔓 Completás | 403 si `current_user.role != rol`. Relee el rol de storage en CADA request. |
+| `require_scope(scope)` | 🔓 Completás | 403 si `scope` no está en el claim `scope` del token. |
+
+**Regla de diseño**: el rol se relee de `storage` (el cambio es inmediato). El scope
+se lee del `token_payload` (lo fijó el login; es del TOKEN, no del usuario).
+
+### 3.2 `users_controller.py` — gestión de usuarios
+
+| Endpoint | Protección | Qué debe devolver |
+|----------|------------|-------------------|
+| `GET /api/users` | `require_role("admin")` | Lista los usuarios de TU empresa |
+| `GET /api/users/{id}` | `require_role("admin")` + tenancy | 200 si el user es de tu empresa; **403 si es de otra** |
+| `PATCH /api/users/{id}/role` | `require_role("admin")` + tenancy | Cambia el rol; 403 si cross-tenant |
+
+### 3.3 `documents_controller.py` — el recurso protegido
+
+| Endpoint | Protección | Qué debe devolver |
+|----------|------------|-------------------|
+| `POST /api/documents` | `require_scope("write")` | Crea un draft privado (201) |
+| `GET /api/documents` | solo autenticado | Públicos del tenant + los tuyos (ya lo hace storage) |
+| `GET /api/documents/{id}` | **tenancy + object-level** | Ver tabla de abajo |
+| `PATCH /api/documents/{id}` | `require_scope("write")` + dueño o admin + tenancy | Edita (403 si cross-tenant o no eres dueño/admin) |
+| `DELETE /api/documents/{id}` | `require_role("admin")` + `require_scope("write")` + tenancy | Borra (403 si cross-tenant) |
+| `POST /api/documents/{id}/publish` | `require_scope("write")` + dueño o admin + tenancy | Publica (403 si cross-tenant o no eres dueño/admin) |
+
+**Tabla de `GET /documents/{id}`** (object-level):
+
+| Caso del documento | admin | editor | viewer |
+|---------------------|:-----:|:------:|:------:|
+| No existe (id inválido) | 404 | 404 | 404 |
+| **De OTRA empresa** | **403** | **403** | **403** |
+| Público, mismo tenant | 200 ✅ | 200 ✅ | 200 ✅ |
+| Privado, propio | 200 ✅ | 200 ✅ | 200 (es tuyo) |
+| Privado de OTRO | 200 ✅ | 403 ❌ | 403 ❌ |
+
+---
+
+## 4 · Dataset demo (no lo modifiqués)
+
+El `storage.py` viene con este dataset SEED — las verificaciones automáticas
+se basan en él. **No renombres emails ni documentos** (podés agregar más).
+
+### Empresas (tenants)
+
+| ID | Nombre |
+|----|--------|
+| 1 | Acme Corp |
+| 2 | Globex Inc |
+
+### Usuarios (password: `demo12345`)
+
+| Email | Rol | Tenant |
+|-------|-----|--------|
+| `admin@acme.com` | admin | Acme (1) |
+| `editor@acme.com` | editor | Acme (1) |
+| `viewer@acme.com` | viewer | Acme (1) |
+| `admin@globex.com` | admin | Globex (2) |
+
+### Documentos
+
+| ID | Título | Owner | Visibilidad | Publicado | Tenant |
+|----|--------|-------|-------------|-----------|--------|
+| 1 | Manual de bienvenida | admin acme | público | ✅ sí | Acme |
+| 2 | Estrategia 2026 | admin acme | privado | ❌ no (draft) | Acme |
+| 3 | Notas de reunión | editor acme | privado | ❌ no (draft) | Acme |
+| 4 | Informe público Q3 | editor acme | público | ✅ sí | Acme |
+| 5 | Plan secreto Globex | admin globex | privado | ❌ no | Globex |
+
+---
+
+## 5 · Herramientas y entorno
+
+### Requisitos
+
+| Herramienta | Para qué | Verificar |
+|-------------|----------|-----------|
+| **uv** (≥ 0.5) | backend (pyproject.toml) | `uv --version` |
+| **pnpm** (nada) | NO necesitás frontend | — |
+| Python ≥ 3.12 | backend | `python3 --version` |
+| **bash** | script de verificación | `bash --version` |
+
+### Arrancar el backend
+
+```bash
+cd 06-autorizacion-rbac/backend
+uv sync               # crea .venv con las dependencias
+uv run -m app.main    # arranca en http://127.0.0.1:8000
+```
+
+El dataset se siembra SOLO (no necesitás crear usuarios ni documentos).
+
+### Verificar tu trabajo
+
+```bash
+bash scripts/verificar_authz.sh
+# → 44 checkpoints: todos ✅ = tu entrega está lista
+```
+
+Si algún check falla, el script te dice **cuál** y qué HTTP code esperaba.
+Cada check es un CASO DE LA MATRIZ de la sección 3 de esta spec.
+
+---
+
+## 6 · Criterios de evaluación (corrección + defensa oral)
+
+### Lo que evalúa el script (40% de la nota)
+
+Cada check es un caso de la matriz. **44 checks verdes** = aprobado en práctica.
+Si algún check falla, descontamos los puntos de cada celda rota.
+
+### Lo que evalúa el código (30% de la nota)
+
+| Criterio | Qué miramos |
+|----------|------------|
+| **Deny-by-default** | Todo endpoint nuevo tiene dependencia de authz |
+| **Dependencias reutilizables** | `require_role` y `require_scope` son factories, no código inline |
+| **Tenancy en TODOS los endpoints** | No hay endpoint que olvide el filtro por tenant |
+| **Object-level en GET** | Mitigación de IDOR: owner o admin en documentos privados |
+| **Legibilidad** | Comentarios explicando POR QUÉ el 403, no solo el código |
+
+### La defensa oral (30% de la nota)
+
+Según el resultado del script de verificación, se programa una defensa oral
+individual de **5 minutos** en la próxima clase presencial.
+
+**Qué se evalúa en la defensa oral:**
+
+1. **Demostración en vivo** (1 min): corré el script de verificación y
+   mostrá los 44 checks verdes. Si algún check falla, explicá POR QUÉ.
+
+2. **Preguntas conceptuales** (4 min). Ejemplos:
+   - "¿Por qué el 403 va después del 404 en `GET /api/documents/{id}`?"
+     → Si el id no existe, no hay nada que proteger. Pero en cross-tenant
+     el recurso EXISTE — solo que no te corresponde: 403.
+   - "¿Por qué el rol se lee de storage y no del token?"
+     → Si un admin cambia el rol de alguien, el cambio es inmediato.
+     Si leyéramos del token, el usuario viejo seguiría con su rol hasta
+     que expire el JWT. Eso es un bug en producción.
+   - "¿Qué pasaría si quitás la dependencia `require_role` de `GET /users`?"
+     → Deny-by-default roto: cualquier autenticado lista los usuarios.
+     Esto es un A01 (Broken Access Control) clásico.
+
+3. **Revisión de código** (proporcional al resultado del script):
+   - Si el script pasó con 44/44: revisamos tu implementations de
+     `require_role`, `require_scope` y el object-level de documents.
+   - Si algún check falló: explicás por qué y proponés el fix.
+
+---
+
+## 7 · Cómo entregar
+
+1. **Fork** del repo base: `https://github.com/desasoftfrlptn/backend.git`
+2. Creá una rama con tu nombre: `git checkout -b tu-nombre/06-autorizacion-rbac`
+3. Commiteá SOLO la carpeta `06-autorizacion-rbac/backend/` (no toques los otros módulos)
+4. Hacé push a TU fork
+5. Abrí un **Pull Request** al repo base: título `"Entrega Módulo 06 — [Tu Nombre]"`
+6. En la descripción del PR pegá la salida de `verificar_authz.sh` (todos los ✅)
+
+> ⚠️ El PR debe estar abierto antes de la fecha límite (22/09 23:59).
+> No se reciben entregas por mail ni por otro canal.
+
+---
+
+## 8 · Decisiones de diseño que debés explicar
+
+En la defensa oral vas a tener que justificar **por qué tus decisiones son las correctas**.
+Estas son las que el docente espera escuchar:
+
+| Decisión | Por qué |
+|----------|---------|
+| `401` ≠ `403` | 401 = no autenticado. 403 = autenticado pero sin permiso. |
+| Rol en storage, scope en token | El cambio de rol es inmediato; el scope vive con el token. |
+| Owner check en documentos privados | Mitiga IDOR (OWASP A01). |
+| Tenancy en endpoints de escritura | Un admin de Acme no borra documentos de Globex. |
+| `require_role` y `require_scope` como factories | Patrón reutilizable, no código inline en cada endpoint. |
+| Deny-by-default | Cualquier endpoint sin dependencia de authz es un bug. |
+
+---
+
+> **Tiempo estimado de la entrega**: 60-90 minutos (si leíste el MATERIAL_PREVIO).
+> **La spec de esta entrega reemplaza a cualquier otro material.** Leé esta SPEC
+> antes de tocar código. Si algo de esta spec contradice al MATERIAL_PREVIO,
+> lo que dice acá es lo que se evalúa.
