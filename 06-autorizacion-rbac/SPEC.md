@@ -35,7 +35,8 @@ El repo ya trae el backend casi listo. Solo modificás **4 archivos**:
 ```
 06-autorizacion-rbac/backend/app/
 ├── models.py            ✅ Dado: Role, User, Document, LoginBody, DocumentCreate...
-├── storage.py           ✅ Dado: 2 tenants + 4 users + 5 docs (seed)
+├── db.py                ✅ Dado: engine + tablas SQLModel (PostgreSQL, persistencia)
+├── storage.py           ✅ Dado: seed idempotente (2 tenants + 4 users + 5 docs)
 ├── config.py            ✅ Dado: SECRET_KEY fail-loud, ALGORITHM
 ├── security.py          ✅ Dado: hash Argon2 + JWT con claims role/tenant/scope
 ├── auth_common.py       ✅ Dado: verify_login (con timing attack)
@@ -131,8 +132,11 @@ visible.**
 
 ## 4 · Dataset demo (no lo modifiqués)
 
-El `storage.py` viene con este dataset SEED — las verificaciones automáticas
-se basan en él. **No renombres emails ni documentos** (podés agregar más).
+Los usuarios y documentos PERSISTEN en **PostgreSQL** (service `postgres` del
+compose, volumen `pgdata`). El `storage.py` viene con este dataset SEED que se
+siembra **SOLO la primera vez** (seed idempotente: si la DB ya tiene datos, no
+duplica) — las verificaciones automáticas se basan en él. **No renombres
+emails ni documentos** (podés agregar más).
 
 ### Empresas (tenants)
 
@@ -180,7 +184,7 @@ El repo ya trae la infraestructura lista — **no la modificás**:
 
 ```
 06-autorizacion-rbac/
-├── docker-compose.yml       ✅ Dado (define backend + frontend como servicios)
+├── docker-compose.yml       ✅ Dado (define postgres + backend + frontend como servicios)
 ├── backend/Dockerfile       ✅ Dado (python:3.12-slim + uv + uvicorn +0.0.0.0)
 ├── backend/uv.lock          ✅ Dado (dependencias Python congeladas por uv)
 ├── backend/.dockerignore    ✅ Dado (excluye .venv, caches)
@@ -194,18 +198,26 @@ El repo ya trae la infraestructura lista — **no la modificás**:
 # desde la raíz del módulo 06-autorizacion-rbac/
 docker compose up --build
 
+# postgres → localhost:5432   (persistencia, volumen pgdata)
 # backend  → http://localhost:8000
 # frontend → http://localhost:5173
 ```
 
 El `docker-compose.yml`:
 
+- **postgres**: PostgreSQL 16 con healthcheck (`pg_isready`) y el volumen
+  `pgdata` — la persistencia real. El backend espera a que esté SANO.
 - **backend**: build con el `Dockerfile`, expone `8000:8000`, corre con
-  `ENVIRONMENT=development` (config.py usa defaults de dev) y tiene
-  healthcheck sobre `/api/health` — el frontend espera a que esté sano.
+  `ENVIRONMENT=development` y `DATABASE_URL` apuntando al service `postgres`
+  (config.py usa defaults de dev) y tiene healthcheck sobre `/api/health` —
+  el frontend espera a que esté sano.
 - **frontend**: build con el suyo, expone `5173:5173`, y el proxy `/api`
   apunta a `http://backend:8000` (el nombre del service en la red interna
   de Compose, no `localhost`).
+
+> 💡 **Reiniciar no borra nada**: los datos viven en el volumen `pgdata`.
+> Para devolver la DB a su estado inicial (volver a sembrar el seed tenés
+> que borrar el volumen a propósito): `docker compose down -v`.
 
 **Verificar tu trabajo (igual que sin docker, desde el host):**
 
@@ -233,6 +245,11 @@ expone el contenedor → **el flujo de verificación no cambia en nada.**
 | Python ≥ 3.12 | runtime del backend (lo maneja uv) | `python3 --version` |
 | **bash** | script de verificación (siempre) | `bash --version` |
 
+> **PostgreSQL NO se instala local**: corre como service del compose
+> (imagen `postgres:16-alpine`, volumen `pgdata`). Para desarrollo local
+> con `uv` lo levantás primero con `docker compose up -d postgres` (o apuntás
+> `DATABASE_URL` a cualquier PostgreSQL que tengas).
+>
 > La toolchain es SIEMPRE la misma, adentro y afuera del contenedor: **uv**
 > dentro de la imagen del backend y **pnpm** (vía corepack) dentro de la del
 > frontend — exactamente lo que corre en tu máquina con `uv sync` y
@@ -244,12 +261,17 @@ expone el contenedor → **el flujo de verificación no cambia en nada.**
 ### Arrancar el backend (desarrollo local)
 
 ```bash
+# 1) La base de datos (service postgres del compose; puerto 5432 expuesto)
+docker compose up -d postgres
+
+# 2) El backend con uv — apunta al mismo postgres (localhost:5432)
 cd 06-autorizacion-rbac/backend
-uv sync               # crea .venv con las dependencias
+uv sync               # crea .venv con las dependencias (incluye sqlmodel + psycopg)
 uv run -m app.main    # arranca en http://127.0.0.1:8000
 ```
 
-El dataset se siembra SOLO (no necesitás crear usuarios ni documentos).
+El dataset se siembra SOLO la primera vez (persistencia: sobrevive a
+reinicios; duplicarlo no es tu trabajo).
 
 ### Arrancar el frontend (desarrollo local)
 
@@ -369,7 +391,7 @@ Estas son las que el docente espera escuchar:
 | Tenancy en endpoints de escritura | Un admin de Acme no borra documentos de Globex. |
 | `require_role` y `require_scope` como factories | Patrón reutilizable, no código inline en cada endpoint. |
 | Deny-by-default | Cualquier endpoint sin dependencia de authz es un bug. |
-| Portabilidad (Docker Compose) | El entorno ENTERO se declara en docker-compose.yml (backend + frontend + puertos + healthcheck). "Funciona en mi máquina" no es una entrega: si tu fork no levanta con `docker compose up`, la corrección no puede empezar. |
+| Portabilidad (Docker Compose) | El entorno ENTERO se declara en docker-compose.yml (postgres + backend + frontend + volumen + healthchecks). "Funciona en mi máquina" no es una entrega: si tu fork no levanta con `docker compose up`, la corrección no puede empezar. |
 | UI como proxy de la matriz | La UI replica la matriz con helpers (`authz.ts`), pero la
 | seguridad REAL la decide el server. Si el server está roto, la UI
 | "dice que sí" y el server también — el 200 aparece en la consola. |

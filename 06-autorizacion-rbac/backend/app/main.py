@@ -20,7 +20,8 @@ Levanta la API de documentos con autorización completa:
       POST /api/documents/{id}/publish → publica (dueño o admin; scope "write")
 
 Al arrancar se siembra el dataset demo (2 empresas, 4 usuarios, 5 docs) en
-memoria — ver app/storage.py. La corrección automática es:
+POSTGRESQL — ver app/storage.py y app/db.py. El seed es IDEMPOTENTE: si la
+DB ya tiene datos, no duplica. La corrección automática es:
 `bash scripts/verificar_authz.sh`
 """
 
@@ -35,7 +36,8 @@ from app.controllers import auth_controller, documents_controller, users_control
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan: siembra el dataset demo al arrancar (todo vuelve a cero al apagar)."""
+    """Lifespan: siembra el dataset demo al arrancar (solo la primera vez:
+    las tablas persisten en PostgreSQL, no se reinician en cada arranque)."""
     storage.seed()
     yield
 
@@ -72,7 +74,7 @@ app = FastAPI(
 
 @app.get("/api/health", response_model=Health, tags=["0 · Health"])
 def health():
-    """El estado de la demo: cuántos users/docs/tenants hay en memoria."""
+    """El estado de la demo: cuántos users/docs/tenants hay en PostgreSQL."""
     return Health(
         status="Funciona",
         users_count=storage.user_count(),

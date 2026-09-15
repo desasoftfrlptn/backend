@@ -54,18 +54,23 @@ Solo tenés que completar **4 archivos** (3 backend + 1 frontend):
 **Opción A — Docker Compose (la forma de la entrega, portabilidad)** ✅
 
 El repo trae `docker-compose.yml` + los Dockerfiles. Levanta TODO el entorno
-(backend + frontend) con un solo comando:
+(backend + frontend + **postgres** con persistencia) con un solo comando:
 
 ```bash
 cd 06-autorizacion-rbac
 docker compose up --build
+# postgres → localhost:5432 (volumen pgdata: los datos sobreviven a reinicios)
 # backend  → http://localhost:8000
 # frontend → http://localhost:5173
 ```
 
-**Opción B — local sin docker** (para desarrollar sin tener Docker Engine):
+**Opción B — local con uv/pnpm** (para desarrollar sin levantar backend y
+frontend en docker; **la base de datos sigue viniendo de docker**):
 
 ```bash
+# Terminal 0 — la DB (service postgres del compose, puerto 5432)
+docker compose up -d postgres
+
 # Terminal 1 — backend
 cd backend
 uv sync
@@ -77,7 +82,8 @@ pnpm install
 pnpm dev                                # → http://localhost:5173
 ```
 
-En ambas opciones el dataset se siembra SOLO (2 empresas, 4 usuarios, 5 docs).
+En ambas opciones el dataset se siembra SOLO la primera vez (2 empresas,
+4 usuarios, 5 docs) y **persiste** entre reinicios del backend.
 
 Verificá (igual con docker o sin docker — el script pega sobre :8000):
 

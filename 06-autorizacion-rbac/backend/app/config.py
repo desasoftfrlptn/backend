@@ -36,6 +36,19 @@ ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 # ──────────────────────────────────────────────────────────────────────────
+# Base de datos (persistencia real — PostgreSQL)
+# ──────────────────────────────────────────────────────────────────────────
+# En el aula la DB vive en docker (docker-compose.yml, service `postgres`) y
+# el backend de Compose recibe DATABASE_URL apuntando a `postgres:5432`.
+# Para desarrollo local con uv: levantá postgres con
+#   docker compose up -d postgres
+# y el default de abajo (localhost:5432) conecta directo.
+DATABASE_URL: str = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg://app:app@localhost:5432/authz",
+)
+
+# ──────────────────────────────────────────────────────────────────────────
 # Tenancy
 # ──────────────────────────────────────────────────────────────────────────
 DEFAULT_TENANT_ID: int = 1

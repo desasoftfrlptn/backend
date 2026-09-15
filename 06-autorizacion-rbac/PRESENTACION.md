@@ -511,14 +511,16 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
      máquina ni depende de lo que tengas instalado". Analogy: el departamento
      terminado según el plano — igual en cualquier edificio.
   3) COMPOSE: "el orquestador: un solo YAML que declara TODOS los servicios
-     (backend + frontend), sus puertos y sus relaciones, y un comando lo
-     levanta todo". Analogy: el contratista general.
+     (postgres + backend + frontend), sus puertos, sus relaciones y un
+     comando lo levanta todo". Analogy: el contratista general.
   IMPLEMENTACIÓN (40 segundos):
   - El repo ya trae docker-compose.yml + los 2 Dockerfiles → NO se modifican
-    en la entrega (son infra de la cátedra, como storage.py).
-  - "Un comando: docker compose up --build. Backend en :8000, frontend en
-    :5173. El healthcheck del compose espera a que el backend esté sano antes
-    de levantar el frontend".
+    en la entrega (son infra de la cátedra, como storage.py y db.py).
+  - "Un comando: docker compose up --build. Postgres en :5432 con un volumen
+    (pgdata — la PERSISTENCIA: los usuarios y roles viven en la base y
+    sobreviven a reinicios). Backend en :8000, frontend en :5173. El
+    healthcheck del compose espera a que postgres esté sano antes de
+    levantar el backend, y al backend antes de levantar el frontend".
   - "El script de verificación corre IGUAL, desde el host, contra :8000 —
     el puerto del contenedor es el mismo puerto de siempre".
   POR QUÉ (15 segundos, con la slide del blockquote): "portabilidad = el
@@ -545,6 +547,7 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
 
 ```bash
 docker compose up --build
+# postgres → localhost:5432  ·  volumen pgdata (persistencia)
 # backend  → http://localhost:8000   ·   healthcheck en /api/health
 # frontend → http://localhost:5173   ·   proxy /api → backend:8000
 ```

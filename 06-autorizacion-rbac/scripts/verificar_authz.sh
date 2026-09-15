@@ -3,13 +3,16 @@
 # Verificador de la MATRIZ DE AUTORIZACIÓN — Módulo 06 (RBAC)
 #
 # Uso: el server debe estar levantado (uv run -m app.main en backend/).
-#      Luego: bash scripts/verificar_authz.sh
+#      Con postgres: docker compose up -d postgres (o la DB que apunte
+#      tu DATABASE_URL). Luego: bash scripts/verificar_authz.sh
 #
 # Cada check es UN CASO DE LA MATRIZ de la spec: si un check falla, sabés
 # EXACTAMENTE qué caso de abuso dejaste abierto (200 donde la matriz pide 403).
 #
 # El script es RE-EJECUTABLE: los documentos y usuarios que crea usan ids y
 # emails únicos por corrida. Los documentos seed (1..5) solo se leen.
+# Con la DB PERSISTENTE las corridas se ACUMULAN, por eso los counts del
+# seed se chequean como >= (mínimos), no como valores exactos.
 # ──────────────────────────────────────────────────────────────────────────
 
 set -u
@@ -33,6 +36,17 @@ check() {
     echo "  ✅ $3"
   else
     echo "  ❌ $3  (esperado $1, recibido $2)"
+  fi
+}
+
+check_ge() {
+  # check_ge <actual> <esperado> <descripcion> — conteos con DB persistente
+  PASS_TOTAL=$((PASS_TOTAL + 1))
+  if [ "$1" -ge "$2" ]; then
+    PASS_OK=$((PASS_OK + 1))
+    echo "  ✅ $3"
+  else
+    echo "  ❌ $3  (esperado >= $2, recibido $1)"
   fi
 }
 
@@ -61,9 +75,9 @@ echo ""
 echo "── 0 · Health y setup ──"
 H=$(curl -s "$BASE/api/health")
 check "1" "$(echo "$H" | grep -c 'Funciona')" "health responde Funciona"
-check "4" "$(echo "$H" | grep -o '"users_count":[0-9]*' | cut -d: -f2)" "4 usuarios demo sembrados"
-check "5" "$(echo "$H" | grep -o '"documents_count":[0-9]*' | cut -d: -f2)" "5 documentos demo sembrados"
-check "2" "$(echo "$H" | grep -o '"tenants_count":[0-9]*' | cut -d: -f2)" "2 empresas (tenants) sembradas"
+check_ge "$(echo "$H" | grep -o '"users_count":[0-9]*' | cut -d: -f2)" 4 ">= 4 usuarios (4 demo del seed + re-ejecuciones)"
+check_ge "$(echo "$H" | grep -o '"documents_count":[0-9]*' | cut -d: -f2)" 5 ">= 5 documentos (5 demo del seed + re-ejecuciones)"
+check_ge "$(echo "$H" | grep -o '"tenants_count":[0-9]*' | cut -d: -f2)" 2 ">= 2 empresas/tenants sembradas"
 
 TOKEN_ADMIN=$(login "$EMAIL_ADMIN")
 TOKEN_EDITOR=$(login "$EMAIL_EDITOR")

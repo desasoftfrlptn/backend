@@ -48,8 +48,12 @@
 ## Fase 0 — Setup (5 minutos)
 
 ```bash
+# 1) La base de datos (service postgres del compose — la PERSISTENCIA)
+docker compose up -d postgres
+
+# 2) El backend con uv (apunta al mismo postgres, localhost:5432)
 cd 06-autorizacion-rbac/backend
-uv sync                  # instala las dependencias en .venv
+uv sync                  # instala las dependencias en .venv (incluye sqlmodel)
 uv run -m app.main       # arranca en :8000
 ```
 
@@ -60,7 +64,9 @@ curl http://localhost:8000/api/health
 # → {"status":"Funciona","users_count":4,"documents_count":5,"tenants_count":2}
 ```
 
-> 💡 El server arranca SOLO con el dataset sembrado. Ningún registro manual.
+> 💡 El server arranca con el dataset sembrado SOLO la primera vez: los
+> usuarios y documentos viven en PostgreSQL y **persisten** entre reinicios.
+> No hace falta ningún registro manual, y reiniciar NO borra nada.
 
 ---
 

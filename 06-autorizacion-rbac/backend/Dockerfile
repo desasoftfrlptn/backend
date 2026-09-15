@@ -1,7 +1,9 @@
 # ──────────────────────────────────────────────────────────────────────────
 # Módulo 06 — Autorización RBAC · Imagen del backend (FastAPI)
 #
-# La app corre en memoria (seed automático al arrancar) → imagen sin estado.
+# La app persiste en PostgreSQL (service `postgres` del compose): el seed
+# siembra el dataset demo SOLO la primera vez (idempotente). Sin base de
+# datos no arranca — el compose espera el healthcheck de postgres primero.
 # El entrypoint usa uvicorn con --host 0.0.0.0 para que el contenedor sea
 # alcanzable desde el host (y desde el frontend en la red de Compose).
 #
