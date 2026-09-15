@@ -25,11 +25,11 @@ style: |
   section.smaller h1 { font-size: 1.4em; }
   section.smaller h2 { font-size: 1.15em; }
 
-  /* ---- Slides de repaso (3-5): texto más grande que el base ---- */
-  section.bigger { font-size: 1.2em; }
-  section.bigger h1 { font-size: 1.8em; }
-  section.bigger h2 { font-size: 1.55em; }
-  section.bigger table { font-size: 0.92em; }
+  /* ---- Slides de repaso (3-5) y la matriz (8): texto más grande ---- */
+  section.bigger { font-size: 1.35em; }
+  section.bigger h1 { font-size: 2em; }
+  section.bigger h2 { font-size: 1.7em; }
+  section.bigger table { font-size: 0.85em; }
 
   /* ---- Código ---- */
   code {
