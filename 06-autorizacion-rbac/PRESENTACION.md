@@ -25,6 +25,62 @@ style: |
   section.smaller h1 { font-size: 1.4em; }
   section.smaller h2 { font-size: 1.15em; }
 
+  /* ---- Slides claras (repaso 04/05): fondo claro + texto negro ---- */
+  section.light {
+    background-color: #ffffff;
+    color: #0f172a;
+  }
+  section.light h1, section.light h2, section.light h3, section.light h4 { color: #0f172a; }
+  section.light strong { color: #0f172a; }
+  section.light em { color: #334155; }
+  section.light a { color: #1d4ed8; }
+  section.light ul li, section.light ol li { color: #1e293b; }
+  section.light ul li::before { color: #1d4ed8; }
+
+  section.light code {
+    color: #be185d;
+    background: #f1f5f9;
+  }
+  section.light pre {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #383a42;
+  }
+  section.light pre code {
+    background: none;
+    color: #383a42;
+  }
+  section.light blockquote {
+    border-left: 4px solid #2563eb;
+    background: #f8fafc;
+  }
+  section.light blockquote p { color: #475569; }
+
+  section.light table { background: #ffffff; }
+  section.light thead { background: #f3f4f6; }
+  section.light th {
+    color: #0f172a;
+    border-bottom: 2px solid #2563eb;
+    background: #f3f4f6;
+  }
+  section.light td {
+    color: #1e293b;
+    border-bottom: 1px solid #e5e7eb;
+    background: #ffffff;
+  }
+  section.light tr:hover td { background: #f8fafc; }
+
+  /* Resaltado sintáctico sobre fondo claro (paleta One Light) */
+  section.light pre code :is(.hljs-keyword, .hljs-doctag, .hljs-template-tag, .hljs-template-variable, .hljs-variable.language_, .hljs-selector-tag) { color: #a626a4 !important; }
+  section.light pre code :is(.hljs-string, .hljs-regexp, .hljs-meta .hljs-string) { color: #50a14f !important; }
+  section.light pre code :is(.hljs-title, .hljs-title.function_, .hljs-title.class_, .hljs-name, .hljs-quote, .hljs-selector-pseudo) { color: #4078f2 !important; }
+  section.light pre code :is(.hljs-attr, .hljs-attribute, .hljs-literal, .hljs-meta, .hljs-selector-attr, .hljs-selector-class, .hljs-selector-id, .hljs-variable) { color: #986801 !important; }
+  section.light pre code :is(.hljs-number, .hljs-symbol) { color: #986801 !important; }
+  section.light pre code :is(.hljs-operator, .hljs-params, .hljs-subst, .hljs-type) { color: #383a42 !important; }
+  section.light pre code :is(.hljs-comment, .hljs-code, .hljs-formula) { color: #a0a1a7 !important; font-style: italic; }
+  section.light pre code :is(.hljs-section, .hljs-bullet) { color: #e45649 !important; font-weight: 700; }
+  section.light pre code .hljs-built_in { color: #c18401 !important; }
+
   /* ---- Código ---- */
   code {
     color: #93c5fd;
@@ -143,12 +199,16 @@ style: |
 
 <!-- _class: lead -->
 <!-- note: |
-  Bienvenida a la clase 06. Hoy NO hay API nueva: cerramos el contrato de
-  seguridad. En el 04 le pusimos identidad (authN), en el 05 vimos los
-  vehículos (sesión/token), y HOY decidimos qué PODÉS hacer (authZ).
-  Esta apertura es breve (10-12 min): repaso 04-05, la brecha A01, y el
-  plan de la entrega OBLIGATORIA. Después, 60 min de trabajo individual.
-  Timing: apertura 0-1 min
+  MINUTO 0-1 · BIENVENIDA
+  Frase de apertura: "Hoy cerramos la trilogía de la seguridad: el 04 le puso
+  identidad a la API (autenticación), el 05 les dio los vehículos (sesión y
+  token), y HOY la API aprende a decidir qué PODÉS hacer (autorización)".
+  Aviso temprano y sin vueltas: hay ENTREGA OBLIGATORIA el 22/09 — va a
+  aparecer varias veces en la clase, no es un rumor.
+  Animar a los que no hicieron la lectura previa: todavía hay tiempo, el
+  MATERIAL_PREVIO.md es la base y la actividad de hoy los pone al día.
+  Si alguien pregunta "¿qué hacemos hoy?", responder con la frase de la
+  portada: "en el 04 la API aprendió quién sos; hoy aprende qué podés hacer".
 -->
 
 # Autorización RBAC
@@ -160,9 +220,19 @@ En el 04 la API aprendió **quién sos**. Hoy la API aprende **qué podés hacer
 ---
 
 <!-- note: |
-  La agenda de hoy. Dejar claro desde el minuto 1 que hay ENTREGA OBLIGATORIA
-  (22/09) y que el ritmo de la clase es individual, no grupal.
-  Timing: apertura 1-2 min
+  MINUTO 1-2 · LA AGENDA
+  Recorrer la tabla rápido, sin leerla: cada fila es una promesa de la clase.
+  1) Repaso 04-05 (5 min): "para que arranquemos todos desde el mismo lugar".
+  2) La brecha A01 (3 min): "la lección más importante del curso, un solo
+     concepto que hoy van a aplicar 44 veces".
+  3) El módulo 06 (4 min): "el mapa de los 5 pilares, no los van a leer acá,
+     la spec los espera".
+  4) Actividad (60 min): "aula invertida: la teoría se leyó en casa, hoy se
+     construye SOLO y se entrega".
+  5) Entrega: "la fecha no se corre: 22/09 23:59, y la defensa oral es 30%.
+     Repito: no se corre".
+  Cerrar con el blockquote: si no hicieron la lectura previa, "la clase les
+  va a pasar por la ventana" — con tono de advertencia amable, no de amenaza.
 -->
 
 ## La clase de hoy
@@ -180,14 +250,28 @@ En el 04 la API aprendió **quién sos**. Hoy la API aprende **qué podés hacer
 
 ---
 
+<!-- _class: smaller light -->
 <!-- note: |
-  REPASO 04. Rápido: la API pasó de "recibe cualquier request" a "sabe quién
-  sos". 4 hitos, 30 segundos cada uno. Preguntar al aire quién se acuerda
-  del hash que usamos (Argon2) y si el JWT se firma o se encripta (se firma).
-  Timing: apertura 2-4 min
+  MINUTO 2-4 · REPASO CLASE 04 — 4 HITOS, 30 SEG CADA UNO
+  Contexto: "En el 04 la API pasó de recibir cualquier request a saber quién
+  sos — eso es AUTENTICACIÓN, y este módulo NUNCA vuelve a tocar eso".
+  1) Argon2: preguntar en voz alta "¿quién se acuerda qué hash usamos?" →
+     Argon2 vía pwdlib. Explicar en una frase por qué lento: "lento para el
+     atacante que quiere romperlo 1000 veces, y para nosotros pasa
+     desapercibido porque lo corremos una vez por login".
+  2) JWT firmado: preguntar "¿el JWT se firma o se encripta?" → SE FIRMA, y
+     por eso el payload es LEGIBLE sin el secreto. Mostrar el ejemplo del
+     JSON: "cualquiera puede decodificar sub/iat/exp, lo que la firma protege
+     es que nadie los altere". Esto es lo que más se confunde en la materia.
+  3) Sesión vs JWT: el tradeoff — "sesión: el estado vive en el server, lo
+     revocás al instante; JWT: stateless, no hay nada que revocar, escala".
+  4) OWASP: nombrar que la autenticación débil entra en el Top 10 (A07 en la
+     edición 2021), y ahí está el gancho: "y el puesto 1 es de OTRO bug, que
+     es justo el de la clase de hoy".
+  Cierre: "El 04 dijo textual: la autorización es el próximo módulo. Hoy es
+  ESE módulo. Autenticar NO es lo mismo que autorizar: la diferencia es la
+  clase entera".
 -->
-
-<!-- _class: smaller -->
 
 ## Repaso · Clase 04 — Autenticación
 
@@ -215,14 +299,30 @@ En el Módulo 04 la API pasó de recibir **cualquier request** a saber **quién 
 
 ---
 
+<!-- _class: smaller light -->
 <!-- note: |
-  REPASO 05. 7 métodos + rate limit. No los repasamos uno por uno: la tabla
-  con la LECCIÓN de cada uno alcanza. El puente: todos resuelven "cómo
-  demuestro quién soy" — ninguno decide "qué puedo hacer". Ese es el hueco.
-  Timing: apertura 4-6 min
+  MINUTO 4-6 · REPASO CLASE 05 — LA TABLA DE LOS 7 VEHÍCULOS
+  Avisar: "el 05 fue asincrónico, así que repasamos lo esencial: los 7
+  métodos responden TODOS a la misma pregunta: ¿cómo demuestro quién soy?".
+  Recorrer la tabla por filas, 15-20 seg cada una, sin leer — la lección:
+  1) Basic: "base64 NO es cifrado, es codificación — solo HTTPS lo salva".
+  2) Session: "la cookie httpOnly con estado en el server: la revocás al
+     instante. Es la arquitectura que usa la facultad".
+  3) Token opaco: "la misma idea pero sin cookie: pensado para APIs".
+  4) JWT header: "stateless: no hay estado que revocar; el token vive solo".
+  5) JWT cookie: "el mismo token pero en cookie httpOnly: cambia el juego
+     XSS vs CSRF según el vehículo que elijas".
+  6) OAuth2: "el PROTOCOLO — OAuth2 define el flujo; JWT es el FORMATO del
+     token que viaja por ese flujo. No son lo mismo, es la pregunta trampa".
+  7) SSO: "el IdP emite el id_token y vos validás iss/aud: SSO es la
+     experiencia; OAuth2/OIDC es el protocolo que la hace posible".
+  Rate limit: "6 intentos fallidos → 429 Retry-After: la seguridad también
+  es política".
+  CIERRE CLAVE — hacer pausa antes del blockquote: "Todos resuelven cómo
+  demostrar quién sos. ¿Y qué podés hacer cuando lo demostraste? NINGUNO
+  responde eso". Ese hueco se llama AUTORIZACIÓN — "y es exactamente la
+  clase de hoy".
 -->
-
-<!-- _class: smaller -->
 
 ## Repaso · Clase 05 — Los 7 vehículos de identidad
 
@@ -244,10 +344,22 @@ Y la frutilla: **rate limit** — 6 intentos fallidos → `429 Retry-After`.
 ---
 
 <!-- note: |
-  La conexión directa con el cierre del módulo 04: la tabla de "las 3
-  preguntas". Este es el momento de activar la memoria: el 04 prometió este
-  módulo. Ahora llega. La pregunta clave de la slide es la 2ª.
-  Timing: apertura 6-8 min
+  MINUTO 6-8 · LAS 3 PREGUNTAS — LA PROMESA CUMPLIDA
+  Esta es la slide que conecta TODO el recorrido del curso: traer la tabla
+  del módulo 04 (ya la vieron) y decir: "el 04 nos dejó esta tabla y una
+  promesa: la autorización era el próximo módulo. Bien: hoy es ese módulo".
+  Fila por fila:
+  1) ¿Quién sos? → Autenticación → "resuelto en 04 y 05, no lo tocamos más".
+  2) ¿Qué podés hacer? → Autorización → "HOY. Y ojo: es la única pregunta que
+     la industria responde peor — el 1º del Top 10 de OWASP".
+  3) ¿Cómo lo demuestro? → Sesión/Token → "resuelto: son los vehículos del 05".
+  Leer la cita del módulo 04 EN VOZ ALTA: "la autorización es el próximo
+  módulo" — genera el momento de reconocimiento en el aula.
+  Cierre: "hoy termina la trilogía. Con la autorización, la API tiene las
+  tres patas: identidad, vehículo y permiso".
+  Si alguien pregunta por el "aula invertida" de la segunda fila: explicar
+  que RBAC (Role-Based Access Control) es el modelo de la clase y que la
+  teoría se leyó en casa — acá se implementa en vivo.
 -->
 
 <!-- _class: smaller -->
@@ -269,12 +381,27 @@ En el 04 vimos esta tabla y quedó una promesa pendiente:
 
 <!-- _class: brecha -->
 <!-- note: |
-  LA LECCIÓN CENTRAL DE TODO EL CURSO. OWASP A01 es la brecha #1 desde 2021.
-  Mostrar el ejemplo concreto del IDOR: viewer@acme.com pidiendo GET /5
-  (plan secreto de Globex). Si el server responde 200 → IDOR. Ese ejemplo
-  lo van a ver en vivo en el frontend del módulo.
-  No mostrar el 5 humillando al que no leyó; es la pregunta de la clase.
-  Timing: apertura 8-9 min
+  MINUTO 8-9 · LA BRECHA #1 — OWASP A01 (LA MÁS IMPORTANTE DE LA CLASE)
+  Bajar el ritmo: esta slide es la razón de ser del módulo entero.
+  Decir: "desde 2021 el puesto 1 del Top 10 de OWASP NO es la inyección:
+  es Broken Access Control — la autorización rota. La vulnerabilidad más
+  común del mundo es justo la que hoy van a arreglar".
+  Leer la pesadilla DESPACIO, línea por línea, en voz alta:
+  "Sos viewer de Acme. Pedís GET /api/documents/5 — el plan secreto de
+  Globex. Tu rol no debería poder. Pero NADA en el server lo verifica.
+  Respuesta: 200 OK" — hacer una pausa en el "200 OK", es el punchline.
+  Explicar el mecanismo en 2 frases: "el endpoint existe, el documento
+  existe, y el server autenticó (sabe quién sos) pero NUNCA preguntó si
+  un viewer puede pedir ese documento. Falta la capa de AUTORIZACIÓN".
+  Introducir el acrónimo IDOR (Insecure Direct Object Reference): "así se
+  llama este bug cuando hablás con URLs directas, y es el bug del módulo".
+  MOSTRAR EN VIVO (opcional si el tiempo da): abrir el frontend del módulo
+  06, loguearse como viewer@acme.com, pedir el documento 5 y mostrar el
+  200 — "esto es lo que hoy vamos a eliminar".
+  Cierre con el blockquote: "autenticar ≠ autorizar. Son las dos caras de
+  la misma puerta: sin la segunda, la primera no alcanza".
+  REGLA DEL ORADOR: no señalar a nadie que no leyó; esta es la pregunta de
+  la clase, no una humillación.
 -->
 
 ## La brecha #1 de la industria (OWASP A01)
@@ -301,10 +428,23 @@ el endpoint existe, el documento existe, y el server **no pregunta quién pide**
 ---
 
 <!-- note: |
-  INTRO 06. Los 5 pilares del módulo (match con el README del módulo).
-  No entrar en detalle de cada uno — la spec y el material previo lo cubren.
-  Este es el MAPA conceptual para que la lectura tenga dónde colgarse.
-  Timing: apertura 9-10 min
+  MINUTO 9-10 · LOS 5 PILARES — EL MAPA CONCEPTUAL DEL MÓDULO
+  Introducción: "esto NO es teoría para memorizar: es el mapa de lo que van
+  a implementar en 60 minutos. Cinco pilares, 20 segundos cada uno".
+  1) RBAC: "rol = conjunto de permisos. admin/editor/viewer. Un viewer que
+     borra un documento recibe 403".
+  2) Object-level: "el permiso depende del OBJETO: un editor ve sus
+     documentos pero NO el privado de otro editor. Acá se mitiga el IDOR
+     de la slide anterior, en GET /documents/{id}".
+  3) Scopes: "el TOKEN tiene límites propios, distintos del rol: un admin
+     con scope read NO puede crear documentos. Rol y scope se cruzan".
+  4) Multi-tenancy: "cada empresa ve SOLO lo suyo: el admin de Globex no ve
+     los usuarios de Acme, aunque su rol sea admin".
+  5) Deny-by-default: "regla de oro: si un endpoint no tiene autorización,
+     es un bug. No lo duden, no lo negocien: cualquier endpoint sin
+     verificación es una puerta abierta".
+  Cierre: "todo eso lo resume LA MATRIZ — que es la próxima slide. Y esa
+  matriz la mide un script con 44 checks: no hay opiniones, hay hechos".
 -->
 
 <!-- _class: fase -->
@@ -325,10 +465,22 @@ el endpoint existe, el documento existe, y el server **no pregunta quién pide**
 ---
 
 <!-- note: |
-  La matriz resumida. Es la "tabla de verdad" de todo el módulo — va a
-  aparecer en la spec, en el frontend y en la defensa oral. No explicar cada
-  celda acá: es el hook de la lectura.
-  Timing: apertura 10-11 min
+  MINUTO 10-11 · LA MATRIZ — EL CORAZÓN DE LA ENTREGA
+  Presentarla como "la tabla de verdad del módulo: aparece en la SPEC, en el
+  frontend y en la defensa oral. Si la entendés, la entrega es trivial".
+  Recorrer SOLO las celdas clave (no leer todas):
+  - "Listar usuarios / cambiar roles": solo admin. Los otros dos → 403.
+  - "Crear/editar/publicar": admin todo, editor lo suyo, viewer 403.
+  - FILA CLAVE: "Ver doc privado de OTRO": admin ✅ (puede todo), editor y
+    viewer → 403. PARAR acá: "esa fila es el IDOR arreglado: el server
+    ahora compara quién pide vs quién es dueño".
+  - "Otra empresa": TODOS 403, incluso admin: el tenant es parte de la
+    identidad, ningún rol lo salta.
+  - "Escribir con token read": TODOS 403: el scope limita al rol.
+  Cierre: "las celdas en rojo son exactamente las que el script verifica,
+  una por una. La consigna es una sola: que el server devuelva tal cual".
+  NO explicar cómo implementar cada celda: eso es la actividad. Esta slide
+  es el CONTRATO, no la solución.
 -->
 
 <!-- _class: smaller -->
@@ -350,10 +502,26 @@ el endpoint existe, el documento existe, y el server **no pregunta quién pide**
 ---
 
 <!-- note: |
-  El plan de la actividad: aula invertida + trabajo individual obligatorio.
-  Es distinto al resto del curso (grupos): hoy es INDIVIDUAL y CON ENTREGA.
-  Marcar el timing: 60 min + la fecha límite del 22/09.
-  Timing: apertura 11-12 min → ¡a trabajar!
+  MINUTO 11-12 · EL PLAN — AULA INVERTIDA + ENTREGA INDIVIDUAL
+  Aviso clave: "hoy es DISTINTO al resto del curso: no hay grupos. Es
+  individual, con entrega, y la dinámica es aula invertida: la teoría se
+  leyó en casa, acá se construye".
+  Recorrer la tabla de minutos:
+  - 0-5: "léanla SPEC PRIMERO. La spec define los 4 archivos y citas la
+    matriz: no se codea sin spec".
+  - 5-30: backend en orden — dependencies.py (las dependencias con
+    require_role), users_controller.py, documents_controller.py.
+  - 30-40: script — "bash scripts/verificar_authz.sh, tienen que ver 44/44
+    verdes. El script es el juez".
+  - 40-55: frontend — "authz.ts: alineen la UI con el server: si el server
+    devuelve 403, la UI no puede mostrar la acción".
+  - 55-60: "preparen la entrega: fork + PR + copia de la salida del script".
+  COMANDOS: leerlos y aclarar — "la API corre en :8000, el frontend en
+  :5173, DOS terminales. El backend se levanta con uv, el frontend con
+  pnpm (igual que el módulo 04)".
+  REGLA DEL TALLER — leerla textual: "el docente no da respuestas, hace
+  preguntas. Si te trabás, escuchás: '¿qué debería devolver el server si vos
+  fueras viewer?' — esa pregunta destraba casi todo".
 -->
 
 <!-- _class: fase -->
@@ -382,11 +550,24 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
 
 <!-- _class: entrega -->
 <!-- note: |
-  LA ENTREGA OBLIGATORIA. Leer los números en voz alta y lenta:
-  FECHA 22/09 23:59 · 4 ARCHIVOS · SCRIPT 40% · DEFENSA ORAL 30%.
-  Aclarar: la solución NO está en el repo y se libera DESPUÉS de la fecha
-  (rama solucion), como en el módulo 04. Copiar = defensa imposible.
-  Timing: 30 segundos (ya está en la spec)
+  MINUTO 12-13 · LA ENTREGA — LEER LOS NÚMEROS EN VOZ ALTA Y DESPACIO
+  Cambio de tono: esto define la nota de la materia en la parte de seguridad.
+  QUÉ: "fork del repo de la cátedra + PR con los 4 archivos 🔓:
+  dependencies.py, users_controller.py, documents_controller.py y authz.ts
+  del frontend. El resto del repo NO se toca".
+  CUÁNDO: "miércoles 22/09 23:59 — no se recibe por ningún otro canal: ni
+  mail, ni classroom, ni pendrive. Si el PR llega a las 23:59 con network
+  timeout, es problema de cómo planificaron, no de la cátedra".
+  CÓMO SE CORRIGE: "el script verificar_authz.sh (44 checks) + revisión de
+  código + defensa oral de 5 minutos en la clase siguiente (24/09)".
+  NOTA — leer la fórmula completa: "script 40% · código 30% · defensa oral
+  30%. La defensa NO es optativa: si no la hacés, perdés 30 puntos".
+  TRANSPARENCIA TOTAL sobre la solución: "la solución se publica en la rama
+  solucion del repo base DESPUÉS de la fecha, como en el módulo 04. Está
+  bien usarla para estudiar después; copiarla ANTES no te sirve: la defensa
+  oral te va a exponer en 30 segundos".
+  Pregunta retórica de cierre: "¿cuántos faltan acá que van a dejar la entrega
+  para el 21 a las 23? — hacé que la respuesta sea 'ninguno'".
 -->
 
 ## 🚦 La entrega — obligatoria
@@ -406,10 +587,27 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
 
 <!-- _class: biblio -->
 <!-- note: |
-  LECTURAS PARA PROFUNDIZAR — 3 niveles: lo oficial (OWASP), la teoría
-  (NIST/RFC) y la práctica (artículos). No obligatorias para la entrega,
-  pero son las que separan un 6 de un 10 en la defensa oral.
-  Timing: si sobra tiempo de la apertura; si no, queda para casa.
+  MINUTO 13-14 · LECTURAS SUGERIDAS (SI SOBRA TIEMPO DE LA APERTURA;
+  SI NO, QUEDA COMO TAREA PARA CASA)
+  Aclarar primero: "ninguna de estas lecturas es obligatoria para la entrega.
+  Son las que separan un 6 de un 10 en la defensa oral".
+  NIVEL 1 — OFICIAL (leer al menos una, 30 minutos):
+  - OWASP A01: la fuente primaria de la brecha de hoy.
+  - Authorization Cheat Sheet: cómo se hace bien en producción.
+  - API Security Top 10 / BOLA: el IDOR en el mundo de las APIs — directo
+    a la defensa oral.
+  NIVEL 2 — TEORÍA (para el que quiere entender el porqué):
+  - INCITS 359-2012: la definición formal de RBAC (roles y permisos).
+  - RFC 6749 §3.3: de dónde sale el scope del token — "cuando lean la
+    SPEC y vean el scope read, es esto: no lo inventamos nosotros, es RFC".
+  - Multi-tenancy: por qué el tenant es parte de la identidad.
+  NIVEL 3 — PRÁCTICA (las que más se aprenden):
+  - Write-ups de IDOR en HackerOne: el tipo de bug que hoy aprenden a
+    cerrar es de los más buscados y mejor pagados del bug bounty.
+  - MATERIAL_PREVIO.md del módulo: tiene su propia bibliografía comentada —
+    si no sabés por dónde arrancar, arrancá por ahí.
+  CIERRE: "en la defensa oral, citar la fuente de cada decisión (OWASP, NIST,
+  RFC) es la diferencia entre 'seguí la guía' y 'entendí la materia'".
 -->
 
 ## Lecturas sugeridas para profundizar
@@ -438,11 +636,19 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
 
 <!-- _class: lead -->
 <!-- note: |
-  Cierre de la apertura. La frase final engancha con el front-end: la lección
-  viva se ve en la consola (200 verde = puerta abierta, 403 rojo = cerrada).
-  Dar el picado: "eso que está en rojo en la consola es el bug que te querés
-  comer; que en verde solo aparezca lo que la matriz dice" .
-  Timing: 30 segundos → start.
+  MINUTO 14-15 · CIERRE DE LA APERTURA → ¡A TRABAJAR!
+  Leer la frase final con la slide:
+  "Hoy la API decide. Quién sos ya lo sabe (04-05). Qué podés hacer lo
+  construís vos".
+  Último mensaje, con el blockquote: "la Universidad te da el mapa (spec,
+  matriz, script); el recorrido lo hacés vos (los 4 archivos) — y este
+  recorrido tiene fecha: 22/09".
+  TRANSICIÓN A LA ACTIVIDAD: "abra la SPEC, levante el backend con uv y el
+  frontend con pnpm (dos terminales), y arranque. El docente da vueltas
+  por el aula respondiendo preguntas CON preguntas. 60 minutos. Éxitos".
+  Nota interna: durante la actividad, priorizar a los que no hicieron la
+  lectura previa: se los nota trabados en la SPEC. La pregunta que más
+  destraba a todos: "¿qué debería devolver el server si vos fueras viewer?".
 -->
 
 ## Hoy la API decide
