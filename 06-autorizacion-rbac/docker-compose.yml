@@ -1,0 +1,49 @@
+# ──────────────────────────────────────────────────────────────────────────
+# Módulo 06 — Autorización RBAC · Docker Compose (portabilidad)
+#
+# Levanta TODO el entorno con un solo comando:
+#   docker compose up --build
+#
+#   · backend  (FastAPI, puerto 8000) → http://localhost:8000
+#   · frontend (Vite dev, puerto 5173) → http://localhost:5173
+#
+# El dataset se siembra SOLO al arrancar el backend (en memoria).
+# La verificación corre IGUAL que sin docker, desde el host:
+#   bash scripts/verificar_authz.sh      # → 44 checks sobre localhost:8000
+#
+# Los Dockerfiles y este compose son infraestructura de la cátedra:
+# NO se modifican en la entrega.
+# ──────────────────────────────────────────────────────────────────────────
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # ENVIRONMENT=development → config.py usa defaults de dev (SECRET_KEY
+    # de desarrollo). En producción se pasa por secret manager, jamás acá.
+    environment:
+      ENVIRONMENT: development
+    ports:
+      - "8000:8000"
+    healthcheck:
+      # python (slim no trae curl) → chequea /api/health
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      # Dentro de la red de Compose el backend se llama `backend` (no
+      # localhost). Vite lee esta var para configurar el proxy /api.
+      VITE_PROXY_TARGET: http://backend:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy

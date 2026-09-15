@@ -51,6 +51,20 @@ Solo tenés que completar **4 archivos** (3 backend + 1 frontend):
 
 ### 3. Levantá y verificá
 
+**Opción A — Docker Compose (la forma de la entrega, portabilidad)** ✅
+
+El repo trae `docker-compose.yml` + los Dockerfiles. Levanta TODO el entorno
+(backend + frontend) con un solo comando:
+
+```bash
+cd 06-autorizacion-rbac
+docker compose up --build
+# backend  → http://localhost:8000
+# frontend → http://localhost:5173
+```
+
+**Opción B — local sin docker** (para desarrollar sin tener Docker Engine):
+
 ```bash
 # Terminal 1 — backend
 cd backend
@@ -62,6 +76,10 @@ cd frontend
 pnpm install
 pnpm dev                                # → http://localhost:5173
 ```
+
+En ambas opciones el dataset se siembra SOLO (2 empresas, 4 usuarios, 5 docs).
+
+Verificá (igual con docker o sin docker — el script pega sobre :8000):
 
 ```bash
 bash scripts/verificar_authz.sh
@@ -90,12 +108,15 @@ sabés exactamente qué caso de abuso dejaste abierto.
 ├── MATERIAL_PREVIO.md        # lectura pre-clase (aula invertida)
 ├── SPEC.md                   # ⭐ spec de la entrega (qué/con qué/criterios)
 ├── GUIA_ALUMNO.md            # guía de descubrimiento por fases
+├── docker-compose.yml        # 🐳 portabilidad: levanta backend + frontend
 ├── backend/
 │   ├── app/                  # 3 archivos a completar (🔓)
 │   ├── pyproject.toml        # dependencias (uv)
+│   ├── Dockerfile            # 🐳 imagen del backend (python:3.12-slim)
 │   └── .env.example
 ├── frontend/
 │   ├── src/authz.ts          # 🔓 1 archivo a completar (helpers autorización)
+│   ├── Dockerfile            # 🐳 imagen del frontend (node:22-alpine + vite)
 │   └── ...                   # todo lo demás dado (herramienta de prueba)
 ├── postman/
 │   └── 06-autorizacion-rbac.postman_collection.json

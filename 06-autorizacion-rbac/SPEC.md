@@ -164,16 +164,79 @@ se basan en él. **No renombres emails ni documentos** (podés agregar más).
 
 ## 5 · Herramientas y entorno
 
+### 5.1 Portabilidad: Docker Compose (requerido en la entrega)
+
+Para asegurar que el entorno funcione **igual en cualquier máquina**, la
+entrega de este módulo incorpora **Docker + Docker Compose** como requisito
+de portabilidad:
+
+> **Tu entrega (los 4 archivos 🔓) debe levantar y pasar los 44 checks
+> con el entorno de docker del repo.** La portabilidad es parte de la
+> nota: si la cátedra no puede levantar tu fork con `docker compose up`,
+> la corrección se hace contra el entorno local de la cátedra (y si ahí
+> también falla, es A01: tu entrega no es reproducible).
+
+El repo ya trae la infraestructura lista — **no la modificás**:
+
+```
+06-autorizacion-rbac/
+├── docker-compose.yml       ✅ Dado (define backend + frontend como servicios)
+├── backend/Dockerfile       ✅ Dado (python:3.12-slim + uvicorn +0.0.0.0)
+├── backend/.dockerignore    ✅ Dado (excluye .venv, caches)
+├── frontend/Dockerfile      ✅ Dado (node:22-alpine + vite dev +0.0.0.0)
+└── frontend/.dockerignore   ✅ Dado (excluye node_modules, dist)
+```
+
+**Levantar todo el entorno con un solo comando:**
+
+```bash
+# desde la raíz del módulo 06-autorizacion-rbac/
+docker compose up --build
+
+# backend  → http://localhost:8000
+# frontend → http://localhost:5173
+```
+
+El `docker-compose.yml`:
+
+- **backend**: build con el `Dockerfile`, expone `8000:8000`, corre con
+  `ENVIRONMENT=development` (config.py usa defaults de dev) y tiene
+  healthcheck sobre `/api/health` — el frontend espera a que esté sano.
+- **frontend**: build con el suyo, expone `5173:5173`, y el proxy `/api`
+  apunta a `http://backend:8000` (el nombre del service en la red interna
+  de Compose, no `localhost`).
+
+**Verificar tu trabajo (igual que sin docker, desde el host):**
+
+```bash
+bash scripts/verificar_authz.sh
+# → 44 checkpoints: todos ✅ = tu entrega está lista
+```
+
+El script pega sobre `http://127.0.0.1:8000`, que es justo el puerto que
+expone el contenedor → **el flujo de verificación no cambia en nada.**
+
+> 💡 **Por qué portabilidad**: "funciona en mi máquina" no es una entrega.
+> Docker Compose declara el entorno ENTERO (lenguaje, dependencias, puertos)
+> en un archivo versionable. Si corre acá, corre igual en el aula, en el
+> home del corrector o en CI. Ese es el estándar 2026 de cualquier lab.
+
 ### Requisitos
 
 | Herramienta | Para qué | Verificar |
 |-------------|----------|-----------|
-| **uv** (≥ 0.5) | backend (pyproject.toml) | `uv --version` |
-| **pnpm** (≥ 9) | frontend (vite + react) | `pnpm --version` |
-| Python ≥ 3.12 | backend | `python3 --version` |
-| **bash** | script de verificación | `bash --version` |
+| **Docker Engine** (≥ 24) | contenedores de backend y frontend | `docker --version` |
+| **Docker Compose v2** | orquestar both servicios | `docker compose version` |
+| **uv** (≥ 0.5) | *alternativa* sin docker (backend) | `uv --version` |
+| **pnpm** (≥ 9) | *alternativa* sin docker (frontend) | `pnpm --version` |
+| Python ≥ 3.12 | *alternativa* sin docker (backend) | `python3 --version` |
+| **bash** | script de verificación (siempre) | `bash --version` |
 
-### Arrancar el backend
+> Docker es el camino **requerido** de la entrega. `uv` + `pnpm` quedan como
+> alternativa local para desarrollar mientras no tenés docker — pero la
+> entrega se valida sobre `docker compose up --build`.
+
+### Arrancar el backend (alternativa sin docker)
 
 ```bash
 cd 06-autorizacion-rbac/backend
@@ -183,7 +246,7 @@ uv run -m app.main    # arranca en http://127.0.0.1:8000
 
 El dataset se siembra SOLO (no necesitás crear usuarios ni documentos).
 
-### Arrancar el frontend
+### Arrancar el frontend (alternativa sin docker)
 
 En **otra terminal** (el backend sigue corriendo en :8000):
 
@@ -257,6 +320,10 @@ individual de **5 minutos** en la próxima clase presencial.
    - "¿Qué pasaría si quitás la dependencia `require_role` de `GET /users`?"
      → Deny-by-default roto: cualquier autenticado lista los usuarios.
      Esto es un A01 (Broken Access Control) clásico.
+   - "¿Por qué la entrega exige `docker compose up`?"
+     → Portabilidad: el entorno es parte del entregable. Declarando
+     imágenes, puertos y healthchecks en un YAML versionable, el mismo
+     código corre en el aula, en tu casa o en CI sin "acá a mí me anda".
 
 3. **Revisión de código** (proporcional al resultado del script):
    - Si el script pasó con 44/44: revisamos tu implementations de
@@ -297,6 +364,7 @@ Estas son las que el docente espera escuchar:
 | Tenancy en endpoints de escritura | Un admin de Acme no borra documentos de Globex. |
 | `require_role` y `require_scope` como factories | Patrón reutilizable, no código inline en cada endpoint. |
 | Deny-by-default | Cualquier endpoint sin dependencia de authz es un bug. |
+| Portabilidad (Docker Compose) | El entorno ENTERO se declara en docker-compose.yml (backend + frontend + puertos + healthcheck). "Funciona en mi máquina" no es una entrega: si tu fork no levanta con `docker compose up`, la corrección no puede empezar. |
 | UI como proxy de la matriz | La UI replica la matriz con helpers (`authz.ts`), pero la
 | seguridad REAL la decide el server. Si el server está roto, la UI
 | "dice que sí" y el server también — el 200 aparece en la consola. |

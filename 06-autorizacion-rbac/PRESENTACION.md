@@ -192,8 +192,9 @@ En el 04 la API aprendió **quién sos**. Hoy la API aprende **qué podés hacer
 | 1 | **Repaso 04-05** (5 min) | AuthN: identidad, JWT, los 7 vehículos |
 | 2 | **La brecha A01** (3 min) | Estás logueado ≠ podés hacerlo. OWASP lo confirma |
 | 3 | **El módulo 06** (4 min) | RBAC + object-level + scopes + tenancy + la matriz |
-| 4 | **Actividad** (60 min) | Leé la SPEC y completá los 4 archivos 🔓 |
-| 5 | **Entrega obligatoria** | Rollo: fork + PR antes del **22/09 23:59** |
+| 4 | **Docker Compose** (1 min) | 🐳 Portabilidad: el entorno entero, un solo comando |
+| 5 | **Actividad** (60 min) | Leé la SPEC y completá los 4 archivos 🔓 |
+| 6 | **Entrega obligatoria** | Rollo: fork + PR antes del **22/09 23:59** |
 
 > La lectura previa (`MATERIAL_PREVIO.md`) ya la hiciste en casa. Si no, hoy
 > vas a ver pasar la clase por la ventana y la fecha límite no se corre.
@@ -497,9 +498,70 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
 
 ---
 
+<!-- _class: fase -->
+<!-- note: |
+  MINUTO 12-13 · DOCKER COMPOSE — PORTABILIDAD (la slide más corta del curso)
+  Contexto en 2 frases: "hasta acá todo se levantaba con uv y pnpm — dos
+  terminales, dos instalaciones, dependencias de tu máquina. Eso tiene un
+  problema: 'en mi máquina funciona'. Esta entrega mata esa frase".
+  CONCEPTOS (30 segundos, uno por uno, con analogía):
+  1) IMAGEN: "la receta del contenedor: el Dockerfile dice qué lenguaje, qué
+     dependencias, qué comando arranca". Analogy: un plano de construcción.
+  2) CONTENEDOR: "la imagen CORRIENDO: un proceso aislado que no ensucia tu
+     máquina ni depende de lo que tengas instalado". Analogy: el departamento
+     terminado según el plano — igual en cualquier edificio.
+  3) COMPOSE: "el orquestador: un solo YAML que declara TODOS los servicios
+     (backend + frontend), sus puertos y sus relaciones, y un comando lo
+     levanta todo". Analogy: el contratista general.
+  IMPLEMENTACIÓN (40 segundos):
+  - El repo ya trae docker-compose.yml + los 2 Dockerfiles → NO se modifican
+    en la entrega (son infra de la cátedra, como storage.py).
+  - "Un comando: docker compose up --build. Backend en :8000, frontend en
+    :5173. El healthcheck del compose espera a que el backend esté sano antes
+    de levantar el frontend".
+  - "El script de verificación corre IGUAL, desde el host, contra :8000 —
+    el puerto del contenedor es el mismo puerto de siempre".
+  POR QUÉ (15 segundos, con la slide del blockquote): "portabilidad = el
+  entorno es parte del entregable. Declarado en un YAML versionable: corre
+  en el aula, en tu casa, en CI. La cátedra va a levantar TU fork con docker
+  compose — si no levanta, la entrega no arranca".
+  Si algún alumno no tiene Docker instalado: avisar que la alternativa uv/pnpm
+  sigue disponible para DESARROLLAR, pero la validación de la entrega es sobre
+  docker. El Dockerfile del frontend usa pnpm@9 — mismo lockfile, cero fricción.
+-->
+
+## Docker Compose — 🐳 el entorno, portátil
+
+**Conceptos (30 seg)**:
+
+| Concepto | Qué es |
+|----------|--------|
+| **Imagen** | la receta (`Dockerfile`): lenguaje, dependencias, comando de arranque |
+| **Contenedor** | la imagen CORRIENDO: proceso aislado, independiente de tu máquina |
+| **Compose** | el orquestador: un YAML declara TODOS los servicios y un comando los levanta |
+
+**Implementación (40 seg) — ya está en el repo, no se modifica**:
+
+```bash
+docker compose up --build
+# backend  → http://localhost:8000   ·   healthcheck en /api/health
+# frontend → http://localhost:5173   ·   proxy /api → backend:8000
+```
+
+Y el script de verificación corre **igual que siempre**, desde el host:
+
+```bash
+bash scripts/verificar_authz.sh   # → 44 checks sobre localhost:8000
+```
+
+> **Portabilidad = el entorno es parte del entregable.** "En mi máquina
+> funciona" muere hoy: la cátedra levanta TU fork con docker compose.
+
+---
+
 <!-- _class: entrega -->
 <!-- note: |
-  MINUTO 12-13 · LA ENTREGA — LEER LOS NÚMEROS EN VOZ ALTA Y DESPACIO
+  MINUTO 13-14 · LA ENTREGA — LEER LOS NÚMEROS EN VOZ ALTA Y DESPACIO
   Cambio de tono: esto define la nota de la materia en la parte de seguridad.
   QUÉ: "fork del repo de la cátedra + PR con los 4 archivos 🔓:
   dependencies.py, users_controller.py, documents_controller.py y authz.ts
@@ -536,7 +598,7 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
 
 <!-- _class: biblio -->
 <!-- note: |
-  MINUTO 13-14 · LECTURAS SUGERIDAS (SI SOBRA TIEMPO DE LA APERTURA;
+  MINUTO 14-15 · LECTURAS SUGERIDAS (SI SOBRA TIEMPO DE LA APERTURA;
   SI NO, QUEDA COMO TAREA PARA CASA)
   Aclarar primero: "ninguna de estas lecturas es obligatoria para la entrega.
   Son las que separan un 6 de un 10 en la defensa oral".
@@ -585,7 +647,7 @@ cd ../frontend && pnpm install && pnpm dev                          # :5173
 
 <!-- _class: lead -->
 <!-- note: |
-  MINUTO 14-15 · CIERRE DE LA APERTURA → ¡A TRABAJAR!
+  MINUTO 15-16 · CIERRE DE LA APERTURA → ¡A TRABAJAR!
   Leer la frase final con la slide:
   "Hoy la API decide. Quién sos ya lo sabe (04-05). Qué podés hacer lo
   construís vos".
