@@ -26,10 +26,10 @@ style: |
   section.smaller h2 { font-size: 1.15em; }
 
   /* ---- Slides de repaso (3-5): texto más grande que el base ---- */
-  section.bigger { font-size: 1.05em; }
-  section.bigger h1 { font-size: 1.55em; }
-  section.bigger h2 { font-size: 1.35em; }
-  section.bigger table { font-size: 0.85em; }
+  section.bigger { font-size: 1.2em; }
+  section.bigger h1 { font-size: 1.8em; }
+  section.bigger h2 { font-size: 1.55em; }
+  section.bigger table { font-size: 0.92em; }
 
   /* ---- Código ---- */
   code {
