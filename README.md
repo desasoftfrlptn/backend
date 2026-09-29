@@ -10,7 +10,7 @@
 
 **Este repositorio es de carácter exclusivamente académico y complementario.**
 
-El material práctico de los módulos 00 a 05 **NO es obligatorio** para la
+El material práctico de los módulos 00 a 05 y 07 **NO es obligatorio** para la
 aprobación de la materia. No hay entregas que evaluar, ni puntos que sumar,
 ni notas que dependan de estos módulos. Son formación de competencias
 profesionales para quienes quieran ir más allá del contenido mínimo.
@@ -41,6 +41,7 @@ El **único objetivo** es **formar competencias profesionales** en desarrollo ba
 | 04 | [Autenticación y Seguridad](./04-autenticacion-seguridad/) | ✅ | Usuarios, register + login, hash Argon2, JWT, sesiones (server-side vs token), SSO vs JWT, seguridad OWASP. Taller por grupos en aula invertida |
 | 05 | [Métodos de Autenticación](./05-metodos-autenticacion/) | ✅ | Los 7 métodos lado a lado (Basic, Session, Token, JWT, Cookie, OAuth2, SSO), rate limiting, security headers, laboratorio frontend. Clase asincrónica |
 | 06 | [**Autorización RBAC**](./06-autorizacion-rbac/) | ✅ | **Entrega OBLIGATORIA**: roles admin/editor/viewer, object-level access control (IDOR), scopes en JWT, multi-tenancy, deny-by-default. 44 checks de verificación + defensa oral |
+| 07 | [Testing Unitario](./07-testing-unitario/) | ✅ | pytest, funciones puras, AAA, TDD. Introducción al testing automatizado (aula invertida + puesta en común) |
 
 ---
 
@@ -53,7 +54,8 @@ El **único objetivo** es **formar competencias profesionales** en desarrollo ba
 - [x] ~~Autenticación JWT~~ (módulo 04: register + login, hash Argon2, JWT, sesiones, SSO vs JWT, OWASP)
 - [x] ~~Autorización RBAC (roles y permisos)~~ (módulo 06: roles admin/editor/viewer, IDOR, scopes, tenancy, deny-by-default — entrega obligatoria)
 - [ ] Migraciones formales con Alembic
-- [ ] Testing automatizado (unitario + integración)
+- [x] ~~Testing unitario~~ (módulo 07: pytest, funciones puras, TDD — introducción)
+- [ ] Testing de integración (TestClient + base de test — próximo módulo)
 - [ ] Dockerización y CI/CD (módulo 02 solo usa Docker para el postgres de la demo)
 - [x] ~~Frontend con TypeScript~~ (módulo 03: React-TS con tipos que reflejan el contrato de la API)
 - [ ] Proyecto integrador: API de Gestión de Proyectos y Tareas
