@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api", tags=["2 · Usuarios (admin)"])
 
 @router.get("/users", response_model=list[UserRead])
 def list_users(
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
+    current_user: User = Depends(require_role(Role.ADMIN)),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
 ):
     """Lista los usuarios de TU empresa (el storage filtra por tu tenant)."""
     return storage.list_users(tenant_id=current_user.tenant_id)
@@ -49,6 +49,8 @@ def get_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
     # 🔓 TODO (tenancy): si user.tenant_id != current_user.tenant_id → 403.
     #    Un admin de Acme NO puede ver a un usuario de Globex.
+    if user.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=403, detail="No podés ver usuarios de otra empresa")
     return user
 
 
@@ -56,7 +58,7 @@ def get_user(
 def change_role(
     user_id: int,
     body: RoleChange,
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
+    current_user: User = Depends(require_role(Role.ADMIN)),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
 ):
     """Cambia el rol de un usuario (la operación más sensible del sistema).
 
@@ -67,5 +69,7 @@ def change_role(
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
     # 🔓 TODO (tenancy): si user.tenant_id != current_user.tenant_id → 403.
+    if user.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=403, detail="No podés modificar usuarios de otra empresa")
     updated = storage.set_user_role(user_id, body.role)
     return updated

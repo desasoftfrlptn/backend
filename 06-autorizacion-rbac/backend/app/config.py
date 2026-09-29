@@ -45,7 +45,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 
 # y el default de abajo (localhost:5432) conecta directo.
 DATABASE_URL: str = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg://app:app@localhost:5432/authz",
+    "postgresql+psycopg://app:app@localhost:5433/authz",
 )
 
 # ──────────────────────────────────────────────────────────────────────────

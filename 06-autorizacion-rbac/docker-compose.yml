@@ -36,7 +36,7 @@ services:
       # Expuesto para que el dev local con `uv run` (opción B) use la MISMA
       # DB. Si tenés un postgres local en 5432, cambiá el mapeo a 5433:5432
       # y ajustá DATABASE_URL en backend/app/config.py.
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
       # Si postgres no está healthy, el backend no arranca (depends_on)
       test: ["CMD-SHELL", "pg_isready -U app -d authz"]

@@ -1,0 +1,68 @@
+
+════ MÓDULO 06 — VERIFICACIÓN DE LA MATRIZ DE AUTORIZACIÓN ════
+Base: http://127.0.0.1:8000   |   Password demo: demo12345
+
+── 0 · Health y setup ──
+  ✅ health responde Funciona
+  ✅ >= 4 usuarios (4 demo del seed + re-ejecuciones)
+  ✅ >= 5 documentos (5 demo del seed + re-ejecuciones)
+  ✅ >= 2 empresas/tenants sembradas
+  ✅ login admin@acme.com → token
+  ✅ login editor@acme.com → token
+  ✅ login viewer@acme.com → token
+  ✅ login admin@globex.com → token
+
+── 1 · Viewer (viewer@acme.com) — la matriz columna viewer ──
+  ✅ ve documento PÚBLICO (#1)
+  ✅ NO ve privado de OTRO (#2)
+  ✅ NO ve privado del editor (#3)
+  ✅ NO ve doc de OTRA empresa (#5, tenancy)
+  ✅ NO puede crear documento (scope read)
+  ✅ NO puede publicar
+  ✅ NO puede borrar
+  ✅ NO puede listar usuarios (solo admin)
+  ✅ NO puede cambiar roles (la operación más sensible)
+
+── 2 · Editor (editor@acme.com) — la matriz columna editor ──
+  ✅ ve documento PÚBLICO (#1)
+  ✅ NO ve privado del admin (#2)
+  ✅ puede CREAR documento (scope write)
+  ✅ puede PUBLICAR su propio documento
+  ✅ puede EDITAR su propio documento
+  ✅ NO puede editar privado de OTRO (#2)
+  ✅ NO puede borrar (solo admin)
+  ✅ NO puede listar usuarios
+  ✅ NO puede cambiar roles
+
+── 3 · Admin (admin@acme.com) — la matriz columna admin ──
+  ✅ ve privado de OTRO (#2, es admin)
+  ✅ edita documento de OTRO (#3)
+  ✅ lista usuarios de su empresa
+  ✅ borra CUALQUIER documento (el del editor)
+  ✅ NO ve doc de OTRA empresa (#5, tenancy también para admin)
+  ✅ NO ve usuarios de OTRA empresa (id 4 = admin de Globex)
+  ✅ registro de usuario nuevo (201)
+  ✅ el usuario nuevo nace como viewer
+  ✅ admin cambia el rol de un usuario
+  ✅ el rol nuevo se ve de inmediato (se relee del storage)
+
+── 4 · Scope del TOKEN vs rol del USUARIO ──
+  ✅ admin loguea con scope 'read'
+  ✅ admin con token read-only NO puede crear (scope < rol)
+  ✅ admin con token read-only SÍ puede leer
+  ✅ viewer NO puede pedir scope 'read write' (auto-elevarse)
+
+── 5 · Multi-tenancy (Globex actúa sobre Acme) ──
+  ✅ Globex NO ve públicos de Acme (#1)
+  ✅ Globex NO ve el detalle de un usuario de Acme (cross-tenant)
+
+── 6 · Autenticación básica ──
+  ✅ sin token → 401
+  ✅ token inválido → 401
+
+═══════════════════════════════════════════════════════════
+RESULTADO: 44 de 44 checkpoints OK
+═══════════════════════════════════════════════════════════
+
+🏆 ¡Matriz de autorización COMPLETA! Guardá esta salida como evidencia.
+

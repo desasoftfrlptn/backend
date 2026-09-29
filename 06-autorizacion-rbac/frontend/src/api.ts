@@ -58,9 +58,11 @@ async function http<T>(
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
+  console.log("[DEBUG http]", { method, url, token, headers });
+
   const entry: LogEntry = { id: ++seq, method, url, label, status: null };
   try {
-    const res = await fetch(url, { method, headers, ...init });
+    const res = await fetch(url, { ...init, method, headers });
     entry.status = res.status;
     if (!silent) pushLog(entry);
 
