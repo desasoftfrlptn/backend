@@ -57,7 +57,7 @@ def get_current_user(
       para que require_scope (que sí lee del token) lo tenga a mano.
     """
     credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
+        status_code=401,
         detail="Credenciales inválidas",
         headers={"WWW-Authenticate": "Bearer"},
     )
@@ -102,12 +102,10 @@ def require_role(required: Role) -> Callable:
     def checker(
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ (reemplaza/envolvé el return de abajo):
-        #    if current_user.role != required:
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
-        return current_user
+            if current_user.role != required:
+                raise HTTPException(status_code=403, detail="No tenés el rol necesario para esta operación")
+            else:
+                return current_user
     return checker
 
 
@@ -141,12 +139,9 @@ def require_scope(required: str) -> Callable:
         request: Request,
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ:
-        #    payload = request.state.token_payload
-        #    token_scope = payload.get("scope", "")
-        #    if required not in token_scope.split():
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        payload = request.state.token_payload
+        token_scope = payload.get("scope", "")
+        if required not in token_scope.split():
+            raise HTTPException(status_code=403, detail="El token no tiene el scope necesario para esta operación")
         return current_user
     return checker
