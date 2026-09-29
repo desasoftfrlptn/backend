@@ -42,27 +42,22 @@ import type { DocumentRead, Role } from "./types";
  * un admin puede loguearse con scope "read" y quedar SOLO LECTURA.
  */
 export function scopeAllowsWrite(scope: string | undefined): boolean {
-  // 🔓 TODO: "read write" contiene "write"; "read" no.
-  //   pista: scope?.split(" ").includes("write")
-  return true;
+  return scope ? scope.split(" ").includes("write") : false;
 }
 
 /** ¿Puede ver el panel de usuarios (GET /api/users)? Solo admin. */
 export function canManageUsers(role: Role | undefined): boolean {
-  // 🔓 TODO: role === "admin"
-  return true;
+  return role === "admin";
 }
 
 /** ¿Puede cambiar el rol de otro usuario (PATCH /users/{id}/role)? Solo admin. */
 export function canChangeRole(role: Role | undefined): boolean {
-  // 🔓 TODO: role === "admin"
-  return true;
+  return role === "admin";
 }
 
 /** ¿Puede BORRAR documentos (DELETE /api/documents/{id})? Solo admin. */
 export function canDelete(role: Role | undefined): boolean {
-  // 🔓 TODO: role === "admin"
-  return true;
+  return role === "admin";
 }
 
 /**
@@ -72,8 +67,7 @@ export function canDelete(role: Role | undefined): boolean {
  *   - un editor NO edita el privado de otro → false
  */
 export function canEdit(userId: number, doc: DocumentRead, role: Role | undefined): boolean {
-  // 🔓 TODO: doc.owner_id === userId || role === "admin"
-  return true;
+  return doc.owner_id === userId || role === "admin";
 }
 
 /**
@@ -82,6 +76,5 @@ export function canEdit(userId: number, doc: DocumentRead, role: Role | undefine
  * por su scope "read", que también bloquea la UI con scopeAllowsWrite.
  */
 export function canPublish(userId: number, doc: DocumentRead, role: Role | undefined): boolean {
-  // 🔓 TODO: doc.owner_id === userId || role === "admin"
-  return true;
+  return doc.owner_id === userId || role === "admin";
 }
