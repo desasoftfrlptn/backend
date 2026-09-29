@@ -92,8 +92,12 @@ def get_document(
     doc = storage.get_document(doc_id)
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
+    # Tenancy: un documento de otra empresa es 403 para todos,
+    # incluso para el admin y aunque el documento sea público.
     if doc.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se pueden ver documentos de otra empresa")
+    # Object-level (mitiga IDOR): conocer el id no alcanza.
+    # Un privado solo lo ve su dueño o un admin de la empresa.
     if doc.visibility != "public":
         if current_user.role != Role.ADMIN:
             if doc.owner_id != current_user.id:
@@ -114,6 +118,8 @@ def update_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
     if doc.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se pueden editar documentos de otra empresa")
+    # Dueño o admin. Sin excepción para públicos: público significa
+    # que todos lo leen, no que todos lo editan.
     if current_user.role != Role.ADMIN:
         if doc.owner_id != current_user.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No podes editar este documento: no sos dueño ni admin")
@@ -124,6 +130,8 @@ def update_document(
 
 @router.delete("/documents/{doc_id}", response_model=DocumentRead)
 def delete_document(
+    # Dos dependencias: el ROL (solo admin borra) y el SCOPE del token
+    # (un admin con token read-only tampoco puede borrar).
     doc_id: int,
     current_user: User = Depends(require_role(Role.ADMIN)),
     _scope: User = Depends(require_scope("write")), # 🔓 TODO: Depends(require_role(Role.ADMIN)) + Depends(require_scope("write"))
@@ -155,6 +163,7 @@ def publish_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
     if doc.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se puede publicar un documento de otra empresa")
+    # Dueño o admin, igual que editar. El viewer ya quedó afuera por su scope "read".
     if current_user.role != Role.ADMIN:
         if doc.owner_id != current_user.id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No podes publicar este documento: no sos dueño ni admin")
