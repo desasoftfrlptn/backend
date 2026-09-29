@@ -13,7 +13,7 @@ y él se encarga del resto.
 import os
 
 from dotenv import load_dotenv
-from sqlmodel import SQLModel, Session, create_engine
+from sqlmodel import SQLModel, create_engine
 
 # La URL sale del .env (o variable de entorno). Mismo patrón que el
 # Módulo 02. El default apunta a postgres local con Docker (la demo).
@@ -39,15 +39,3 @@ def create_db_and_tables() -> None:
     toca (por eso podés reutilizar la base del Módulo 02 sin romperla).
     """
     SQLModel.metadata.create_all(engine)
-
-
-def get_session():
-    """
-    Proporciona una SESIÓN por cada request (generador para FastAPI).
-
-    La sesión es la "ventanilla" del ORM: con ella leés y escribís en
-    la base. Se abre al empezar el request y se cierra al terminar
-    (el `with` hace commit/rollback automático según haya error o no).
-    """
-    with Session(engine) as session:
-        yield session

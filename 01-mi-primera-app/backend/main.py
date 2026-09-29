@@ -10,12 +10,15 @@ Ejecutar:
 
 Endpoints:
     GET    /api/tasks         → Listar todas las tareas
+    GET    /api/tasks/stats   → Totales: total / completed / pending
     POST   /api/tasks         → Crear una tarea nueva
     PATCH  /api/tasks/{id}    → Toggle completada / no completada
     DELETE /api/tasks/{id}    → Eliminar una tarea
+    GET    /api/health        → Health check
 """
 
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
@@ -30,10 +33,29 @@ from pydantic import BaseModel, Field
 # FastAPI devuelve un error 422 claro y descriptivo.
 
 
+class Priority(str, Enum):
+    """
+    Prioridad de una tarea.
+
+    Heredar de `str` y de `Enum` a la vez tiene dos efectos:
+      1. Pydantic acepta SOLO estos tres valores. Cualquier otro
+         string devuelve un 422 automático, sin escribir un `if`.
+      2. Swagger lo muestra como desplegable en vez de texto libre.
+    """
+
+    BAJA = "baja"
+    MEDIA = "media"
+    ALTA = "alta"
+
+
 class TaskCreate(BaseModel):
-    """Modelo para CREAR una tarea. Solo pedimos el título."""
+    """Modelo para CREAR una tarea. Pedimos el título y, opcionalmente, la prioridad."""
 
     title: str = Field(..., min_length=1, max_length=200, examples=["Comprar leche"])
+    priority: Priority = Field(
+        default=Priority.MEDIA,
+        description="Prioridad de la tarea. Si no la mandás, queda en 'media'.",
+    )
 
 
 class Task(BaseModel):
@@ -43,6 +65,16 @@ class Task(BaseModel):
     title: str
     completed: bool
     created_at: str
+    priority: Priority
+
+
+class TaskStats(BaseModel):
+    """Totales de las tareas, para el endpoint GET /api/tasks/stats."""
+
+    total: int
+    completed: int
+    pending: int
+    by_priority: dict[str, int]
 
 
 # ============================================================
@@ -110,16 +142,40 @@ def list_tasks():
     return tasks
 
 
+@app.get("/api/tasks/stats", response_model=TaskStats)
+def task_stats():
+    """
+    Devuelve los totales de las tareas.
+
+    OJO CON EL ORDEN DE LAS RUTAS: ésta va declarada ANTES que
+    cualquier `/api/tasks/{task_id}`. FastAPI evalúa las rutas en
+    el orden en que las definís, así que si `{task_id}` fuera
+    primero, la palabra "stats" entraría como si fuera un ID y la
+    respuesta sería un 422 ("stats no es un int"). Es un bug
+    clásico y bastante desconcertante la primera vez que lo pisás.
+    """
+    completed = sum(1 for t in tasks if t["completed"])
+
+    return TaskStats(
+        total=len(tasks),
+        completed=completed,
+        pending=len(tasks) - completed,
+        by_priority={p.value: sum(1 for t in tasks if t["priority"] == p.value) for p in Priority},
+    )
+
+
 @app.post("/api/tasks", response_model=Task, status_code=201)
 def create_task(body: TaskCreate):
     """
     Crea una tarea nueva.
 
     El body debe tener:
-      - "title": string no vacío (máximo 200 caracteres)
+      - "title":    string no vacío (máximo 200 caracteres)
+      - "priority": "baja" | "media" | "alta" (opcional, default "media")
 
     FastAPI valida automáticamente con Pydantic.
     Si falta el title o está vacío, devuelve error 422.
+    Si mandás una prioridad que no existe, también 422.
     """
     global next_id
 
@@ -128,6 +184,9 @@ def create_task(body: TaskCreate):
         "title": body.title.strip(),
         "completed": False,
         "created_at": datetime.now(timezone.utc).isoformat(),
+        # .value guarda el string plano ("alta") en vez del objeto Enum.
+        # Así la lista de tareas es JSON puro, sin tipos de Python adentro.
+        "priority": body.priority.value,
     }
     next_id += 1
     tasks.append(task)
@@ -176,7 +235,7 @@ def delete_task(task_id: int):
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "Funciona", "service": "mi-primera-app-backend", "tasks_count": len(tasks)}
+    return {"status": "Todo en orden", "service": "mi-primera-app-backend", "tasks_count": len(tasks)}
 
 
 # ============================================================

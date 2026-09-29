@@ -28,19 +28,53 @@ router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
 @router.get("", response_model=list[TaskRead])
 def list_tasks(service: TaskService = Depends(get_task_service)):
-    raise NotImplementedError("TODO: implementar list_tasks")
+    return service.list_tasks()
 
 
-# TODO: agregá acá los endpoints que faltan:
-#   - GET /{task_id}
-#   - POST ""
-#   - PATCH /{task_id}
-#   - DELETE /{task_id}
-#
-# Recordá: cuando el service devuelve None (o False), acá se traduce a 404:
-#
-#   if task is None:
-#       raise HTTPException(
-#           status_code=status.HTTP_404_NOT_FOUND,
-#           detail=f"Tarea {task_id} no encontrada",
-#       )
+@router.get("/{task_id}", response_model=TaskRead)
+def get_task(task_id: int , service: TaskService = Depends(get_task_service)):
+  task = service.get_task(task_id)
+  if task is None:
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Tarea {task_id} no encontrada",
+    )
+  return task
+
+@router.post("", response_model = TaskRead, status_code = status.HTTP_201_CREATED)
+def create_task(body: TaskCreate, service: TaskService = Depends(get_task_service)):
+  try:
+    return service.create_task(body)
+  except ValueError as error:
+    # El service avisó que se violó una regla de negocio. Acá —y solo
+    # acá— eso se traduce a HTTP.
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=str(error),
+    )
+
+@router.patch("/{task_id}", response_model = TaskRead)
+def update_task(task_id: int, body: TaskUpdate, service: TaskService = Depends(get_task_service)):
+  try:
+    task = service.update_task(task_id, body)
+  except ValueError as error:
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=str(error),
+    )
+  if task is None:
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Tarea {task_id} no encontrada",
+    )
+  return task
+
+@router.delete("/{task_id}")
+def delete_task(task_id: int, service: TaskService = Depends(get_task_service)):
+  ok = service.delete_task(task_id)
+  if not ok:
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail=f"Tarea {task_id} no encontrada",
+    )
+  return {"ok": True}

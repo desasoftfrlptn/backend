@@ -48,6 +48,7 @@ body {
 /* ---- Formulario ---- */
 .add-form {
   display: flex;
+  flex-wrap: wrap; /* Con 3 elementos, en pantallas chicas bajan de línea */
   gap: 10px;
   margin-bottom: 20px;
 }
@@ -63,6 +64,25 @@ body {
 }
 
 .add-input:focus {
+  border-color: #2563eb;
+}
+
+/* ---- Select de prioridad ---- */
+.priority-select {
+  padding: 12px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  outline: none;
+  text-transform: capitalize;
+  transition: border-color 0.2s;
+}
+
+.priority-select:focus {
   border-color: #2563eb;
 }
 
@@ -96,6 +116,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 12px 16px;
   background: white;
   border-radius: 8px;
@@ -129,6 +150,46 @@ body {
 
 .task-title {
   font-size: 1rem;
+}
+
+/* ---- Badge de prioridad ---- */
+/* Un modificador de clase por valor (priority-badge--alta, etc.).
+   El color NO es la única señal: el texto dice la prioridad, así
+   que también se entiende sin distinguir colores. */
+.priority-badge {
+  flex-shrink: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+
+.priority-badge--alta {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.priority-badge--media {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.priority-badge--baja {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #15803d;
+}
+
+/* Una tarea completada baja el volumen de su badge */
+.task-item.completed .priority-badge {
+  background: #f5f5f5;
+  border-color: #e5e5e5;
+  color: #999;
 }
 
 .delete-button {

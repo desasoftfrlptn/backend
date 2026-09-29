@@ -54,11 +54,15 @@ export async function fetchTasks() {
 /**
  * POST /api/tasks → Crea una tarea nueva
  * @param {string} title - Título de la tarea
+ * @param {string} priority - "baja" | "media" | "alta"
+ *
+ * Si mandás una prioridad que el backend no conoce, responde 422
+ * y el helper request() lo convierte en una excepción.
  */
-export async function createTask(title) {
+export async function createTask(title, priority = "media") {
   return request("/tasks", {
     method: "POST",
-    body: JSON.stringify({ title }),
+    body: JSON.stringify({ title, priority }),
   });
 }
 

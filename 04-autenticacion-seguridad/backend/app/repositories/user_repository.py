@@ -33,7 +33,8 @@ class UserRepository:
         `self.session.exec(...)` y usás `.first()` (no `.all()`) porque
         querés UNO o None.
         """
-        raise NotImplementedError("TODO: implementar get_by_email")
+        statement = select(User).where(User.email == email)
+        return self.session.exec(statement).first()
 
     def get_by_id(self, user_id: int) -> User | None:
         """
@@ -41,7 +42,7 @@ class UserRepository:
 
         Pista: el ORM tiene atajo — `self.session.get(User, user_id)`.
         """
-        raise NotImplementedError("TODO: implementar get_by_id")
+        return self.session.get(User, user_id)
 
     def create(self, email: str, hashed_password: str) -> User:
         """
@@ -50,7 +51,11 @@ class UserRepository:
         Pista: `User(email=email, hashed_password=hashed_password)`, luego
         `add()`, `commit()` y `refresh()` para traer id + created_at.
         """
-        raise NotImplementedError("TODO: implementar create")
+        user = User(email=email, hashed_password=hashed_password)
+        self.session.add(user)
+        self.session.commit()
+        self.session.refresh(user)
+        return user
 
     def count(self) -> int:
         # EJEMPLO resuelto — te sirve de referencia (el health lo usa).

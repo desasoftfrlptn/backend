@@ -33,7 +33,16 @@ def register(body: UserCreate, service: AuthService = Depends(get_auth_service))
     - Si devuelve un User → lo devolvés (FastAPI lo serializa con UserRead,
       que NO incluye el hash).
     """
-    raise NotImplementedError("TODO: implementar register")
+    user = service.register_user(body)
+    if user is None:
+        # El service dijo "no se pudo". El único motivo posible es que el
+        # email ya exista → 409 Conflict (el recurso ya existe).
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El email ya está registrado",
+        )
+    # `response_model=UserRead` filtra el hashed_password de la respuesta.
+    return user
 
 
 @router.post("/login", response_model=Token)
@@ -51,4 +60,17 @@ def login(body: UserLogin, service: AuthService = Depends(get_auth_service)):
     🧠 El `sub` del token es el ID del usuario (como string). Por eso en
     `get_current_user` se hace `int(payload["sub"])`.
     """
-    raise NotImplementedError("TODO: implementar login")
+    user = service.authenticate_user(body.email, body.password)
+    if user is None:
+        # MISMO mensaje genérico para "email inexistente" y para
+        # "contraseña incorrecta": si los diferenciáramos, le estaríamos
+        # confirmando al atacante qué emails existen (user enumeration).
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email o contraseña incorrectos",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # El subject del token es el id del usuario, como string.
+    access_token = create_access_token(str(user.id))
+    return Token(access_token=access_token, token_type="bearer")

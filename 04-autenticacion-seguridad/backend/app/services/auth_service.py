@@ -25,6 +25,12 @@ from app.models.user import User, UserCreate
 from app.repositories.user_repository import UserRepository
 from app.security import hash_password, verify_password
 
+# Hash "señuelo" para el bonus de timing attack: se calcula UNA sola vez al
+# importar el módulo. Cuando el email no existe verificamos contra este hash,
+# así el login tarda lo MISMO exista o no el usuario, y el atacante no puede
+# deducir qué emails están registrados midiendo el tiempo de respuesta.
+_DUMMY_HASH = hash_password("contrasena-señuelo-que-nunca-coincide")
+
 
 class AuthService:
     """Casos de uso de autenticación: register y login."""
@@ -45,7 +51,20 @@ class AuthService:
           3. Hasheá la contraseña con `hash_password(body.password)`.
           4. Devolvé `repository.create(email, hashed)`.
         """
-        raise NotImplementedError("TODO: implementar register_user")
+        # 1. Normalizamos: los emails son case-insensitive (regla de negocio).
+        email = body.email.lower().strip()
+
+        # 2. Si ya existe alguien con ese email, no se puede registrar.
+        #    Devolvemos None: el 409 lo decide el controller, no el service.
+        if self.repository.get_by_email(email) is not None:
+            return None
+
+        # 3. El hash se hace ACÁ, antes de tocar la base. El repository
+        #    nunca ve la contraseña en texto plano.
+        hashed = hash_password(body.password)
+
+        # 4. Persistimos y devolvemos el User creado (con id y created_at).
+        return self.repository.create(email, hashed)
 
     def authenticate_user(self, email: str, password: str) -> User | None:
         """
@@ -67,7 +86,27 @@ class AuthService:
         no existe, así el tiempo es constante. Investigá: ¿cómo lo harías?
         (Pista: `hash_password("dummy")` una sola vez, y verificá contra eso.)
         """
-        raise NotImplementedError("TODO: implementar authenticate_user")
+        # 1. Misma normalización que en el registro; si no, "Juan@X.com" no
+        #    podría loguearse en la cuenta guardada como "juan@x.com".
+        email = email.lower().strip()
+
+        # 2. Buscamos al usuario.
+        user = self.repository.get_by_email(email)
+
+        # 3. Si no existe, verificamos igual contra el hash señuelo. El
+        #    resultado siempre es False, pero el costo en tiempo de Argon2 se
+        #    paga igual → "email inexistente" tarda lo mismo que "contraseña
+        #    mal" (bonus: timing attack / user enumeration).
+        if user is None:
+            verify_password(password, _DUMMY_HASH)
+            return None
+
+        # 4. Credenciales inválidas → None (el 401 lo traduce el controller).
+        if not verify_password(password, user.hashed_password):
+            return None
+
+        # 5. Credenciales válidas.
+        return user
 
     def count_users(self) -> int:
         # EJEMPLO resuelto — el health check usa este método.

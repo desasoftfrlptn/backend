@@ -83,4 +83,28 @@ def get_current_user(
     deja propagar la excepción del JWT; la traducción a status code la hacés
     vos acá. Es EXACTAMENTE el mismo criterio que el 404 del Módulo 03.
     """
-    raise NotImplementedError("TODO: implementar get_current_user")
+    # Una sola excepción reutilizable: el cliente recibe siempre la misma
+    # respuesta, sin importar si el token estaba mal firmado, expiró o
+    # apuntaba a un usuario que ya no existe.
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Credenciales inválidas",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        # decode_token verifica la FIRMA y la expiración. Si algo anda mal,
+        # lanza una subclase de InvalidTokenError.
+        payload = decode_token(token)
+        # El "sub" lo guardamos como string en create_access_token.
+        user_id = int(payload["sub"])
+    except (InvalidTokenError, KeyError, TypeError, ValueError):
+        # Token inválido/expirado, o sin un "sub" convertible a int.
+        raise credentials_exception
+
+    user = repository.get_by_id(user_id)
+    if user is None:
+        # Token válido y bien firmado, pero el usuario ya no está en la base.
+        raise credentials_exception
+
+    return user

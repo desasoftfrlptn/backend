@@ -22,10 +22,18 @@ import { useState, useEffect } from "react";
 import { fetchTasks, createTask, toggleTask, deleteTask } from "./api";
 import "./App.css";
 
+// Las mismas tres opciones que el enum Priority del backend.
+// Están duplicadas a propósito: el frontend y el backend son dos
+// programas distintos y no comparten código. Mantenerlas sincronizadas
+// a mano es justamente lo que después resuelven TypeScript + un
+// cliente generado desde el openapi.json.
+const PRIORITIES = ["baja", "media", "alta"];
+
 export default function App() {
   // ---- Estado ----
   const [tasks, setTasks] = useState([]); // Lista de tareas
   const [newTitle, setNewTitle] = useState(""); // Input controlado
+  const [newPriority, setNewPriority] = useState("media"); // Select controlado
   const [loading, setLoading] = useState(true); // Estado de carga
   const [error, setError] = useState(null); // Mensaje de error
 
@@ -57,9 +65,10 @@ export default function App() {
     if (!title) return; // No crear tareas vacías
 
     try {
-      const task = await createTask(title);
+      const task = await createTask(title, newPriority);
       setTasks([...tasks, task]); // Agrego al final (inmutabilidad)
       setNewTitle(""); // Limpio el input
+      setNewPriority("media"); // Vuelvo la prioridad al default
       setError(null);
     } catch (err) {
       setError("Error al crear la tarea");
@@ -106,6 +115,20 @@ export default function App() {
           onChange={(e) => setNewTitle(e.target.value)}
           autoFocus
         />
+        {/* Select de prioridad — los valores tienen que coincidir
+            exactamente con el enum Priority del backend */}
+        <select
+          className="priority-select"
+          value={newPriority}
+          onChange={(e) => setNewPriority(e.target.value)}
+          aria-label="Prioridad de la tarea"
+        >
+          {PRIORITIES.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
         <button type="submit" className="add-button" disabled={!newTitle.trim()}>
           Agregar
         </button>
@@ -138,6 +161,11 @@ export default function App() {
                 />
                 <span className="task-title">{task.title}</span>
               </label>
+              {/* El badge va FUERA del <label>: si estuviera adentro,
+                  clickearlo dispararía el toggle del checkbox */}
+              <span className={`priority-badge priority-badge--${task.priority}`}>
+                {task.priority}
+              </span>
               <button
                 className="delete-button"
                 onClick={() => handleDelete(task.id)}

@@ -21,23 +21,43 @@ class TaskService:
         self.repository = repository
 
     def list_tasks(self) -> list[Task]:
-        raise NotImplementedError("TODO: implementar list_tasks")
+        return self.repository.list_all()
 
     def get_task(self, task_id: int) -> Task | None:
-        raise NotImplementedError("TODO: implementar get_task")
+        return self.repository.get_by_id(task_id)
 
     def create_task(self, body: TaskCreate) -> Task:
-        # Pista: normalizá el título con .strip() antes de crear.
-        # Esa es una REGLA DE NEGOCIO, por eso vive acá (no en el controller).
-        raise NotImplementedError("TODO: implementar create_task")
+        # Normalizar el título es una REGLA DE NEGOCIO: vive acá, no en
+        # el controller. Un título que queda vacío tras el .strip() no es
+        # una tarea válida, así que lo rechazamos con un ValueError.
+        # Ojo: ValueError es Python puro, NO es HTTP. El service sigue sin
+        # saber qué es un 400 — eso lo traduce el controller.
+        return self.repository.create(self._normalize_title(body.title))
 
     def update_task(self, task_id: int, body: TaskUpdate) -> Task | None:
-        # Pista: si no existe, devolvé None. Si existe, actualizá.
-        raise NotImplementedError("TODO: implementar update_task")
+        task = self.repository.get_by_id(task_id)
+        if task is None:
+            return None
+        # Misma regla que en create: si mandan título, se normaliza igual.
+        if body.title is not None:
+            body.title = self._normalize_title(body.title)
+        return self.repository.update(task, body)
 
     def delete_task(self, task_id: int) -> bool:
+        task = self.repository.get_by_id(task_id)
+        if task is None:
+            return False
+        self.repository.delete(task)
+        return True
         # Pista: devolvé True si existía y se borró, False si no.
-        raise NotImplementedError("TODO: implementar delete_task")
+
+    @staticmethod
+    def _normalize_title(title: str) -> str:
+        """Recorta espacios y exige que quede algo. Regla de negocio."""
+        normalized = title.strip()
+        if not normalized:
+            raise ValueError("El título no puede estar vacío")
+        return normalized
 
     def count_tasks(self) -> int:
         # EJEMPLO resuelto — el health check usa este método.
