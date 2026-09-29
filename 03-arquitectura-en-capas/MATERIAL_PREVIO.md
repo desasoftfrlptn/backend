@@ -255,3 +255,8 @@ Respondé mentalmente. Si dudás, releé la sección:
 - **Actitud de taller**: vas a construir en grupo, no a copiar.
 
 > *"La Universidad te da el mapa. El recorrido lo hacés vos."*
+
+Por qué construimos asi? para separar las responsabilidades 
+Que tenes que completar? separate responsibilities
+Por qué separar en capas? es mas facil de leer, separas responsabilidades, es mas organizado.
+Regla de negocio: cada tarea se crea si o si con un titulo, un script, etc. En este dominio se llama titulo de la tarea

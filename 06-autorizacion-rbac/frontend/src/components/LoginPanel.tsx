@@ -67,7 +67,7 @@ export default function LoginPanel({ onLoggedIn }: Props) {
         setRegName("");
         setRegPassword("");
       } else {
-        setRegMessage(`${res.status}: ${res.detail}` ?? "Error");
+        setRegMessage(`${res.status}: ${res.detail || "Error"}`);
       }
     });
   }
