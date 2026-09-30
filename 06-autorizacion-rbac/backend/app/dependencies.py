@@ -84,6 +84,7 @@ def get_current_user(
 
 
 def require_role(required: Role) -> Callable:
+    
     """Factory de dependencia: exige que el usuario tenga `required` (o 403).
 
     Uso en los endpoints:
@@ -102,11 +103,12 @@ def require_role(required: Role) -> Callable:
     def checker(
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ (reemplaza/envolvé el return de abajo):
-        #    if current_user.role != required:
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        if current_user.role != required:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tenés el rol necesario para esta operación",
+            )
+        
         return current_user
     return checker
 
@@ -141,12 +143,13 @@ def require_scope(required: str) -> Callable:
         request: Request,
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ:
-        #    payload = request.state.token_payload
-        #    token_scope = payload.get("scope", "")
-        #    if required not in token_scope.split():
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        playload = request.state.token_payload
+        token_scope = playload.get("scope", "")
+        if required not in token_scope.split():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="El token no tiene el scope necesario para esta operación",
+            )
+        
         return current_user
     return checker
