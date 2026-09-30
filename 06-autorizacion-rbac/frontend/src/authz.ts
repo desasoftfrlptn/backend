@@ -46,7 +46,7 @@ export function scopeAllowsWrite(scope: string | undefined): boolean {
   //   pista: scope?.split(" ").includes("write")
   return scope?.split(" ").includes("write") ?? false;
 }
-}
+
 
 /** ¿Puede ver el panel de usuarios (GET /api/users)? Solo admin. */
 export function canManageUsers(role: Role | undefined): boolean {
