@@ -277,10 +277,12 @@ Completá la collection de Postman (`postman/03-arquitectura-en-capas...`)
 con el flujo feliz + casos límite, y preparate para responder en voz alta:
 
 1. ¿Qué ganamos separando en capas?
+Cada capa cambia por una sola razón, si tegno que cambiar la base de datos, solo tocás el repository, si una regla de negocio cambia solo tocas el service, si cambia el http solo toco el controller.
 2. ¿Dónde vive el 404 y por qué no en el service?
+El 404 esta en el controller, ya que, el 404 es un codigo de estado http.
 3. ¿Qué SQL que escribías a mano en el 02 ahora escribe el ORM?
 4. ¿Qué te da TypeScript que JavaScript no te daba?
-
+Verificacion de tipos en tiempo de compilacion, si escribo mal un campo TypeScript lo marca como error antes de correr el codigo.
 ---
 
 ## 🔐 La solución

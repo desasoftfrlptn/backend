@@ -21,23 +21,31 @@ class TaskService:
         self.repository = repository
 
     def list_tasks(self) -> list[Task]:
-        raise NotImplementedError("TODO: implementar list_tasks")
+        return self.repository.list_all()
 
     def get_task(self, task_id: int) -> Task | None:
-        raise NotImplementedError("TODO: implementar get_task")
+        return self.repository.get_by_id(task_id)
 
     def create_task(self, body: TaskCreate) -> Task:
         # Pista: normalizá el título con .strip() antes de crear.
         # Esa es una REGLA DE NEGOCIO, por eso vive acá (no en el controller).
-        raise NotImplementedError("TODO: implementar create_task")
+        title = body.title.strip()
+        return self.repository.create(title)
 
     def update_task(self, task_id: int, body: TaskUpdate) -> Task | None:
         # Pista: si no existe, devolvé None. Si existe, actualizá.
-        raise NotImplementedError("TODO: implementar update_task")
+        task = self.repository.get_by_id(task_id)
+        if task is None:
+            return None
+        return self.repository.update(task, body)
 
     def delete_task(self, task_id: int) -> bool:
         # Pista: devolvé True si existía y se borró, False si no.
-        raise NotImplementedError("TODO: implementar delete_task")
+        task = self.repository.get_by_id(task_id)
+        if task is None:
+            return False
+        self.repository.delete(task)
+        return True
 
     def count_tasks(self) -> int:
         # EJEMPLO resuelto — el health check usa este método.

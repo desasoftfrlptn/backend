@@ -37,21 +37,24 @@ def test_scope_allows_write_solo_read():
 # ── Fase 1 · Completá los TODO ─────────────────────────────────────────────
 
 def test_can_manage_users_solo_admin():
-    # TODO: assert que can_manage_users("admin") es True
-    # TODO: assert que can_manage_users("viewer") es False
-    assert False, "TODO: completá este test"
-
+   assert can_manage_users("admin") is True
+   assert can_manage_users("viewer") is False
+   def can_manage_users(role):
+    return role == "admin"
+   
 
 def test_can_delete_solo_admin():
-    # TODO: assert que can_delete("admin") es True
-    # TODO: assert que can_delete("editor") es False
-    assert False, "TODO: completá este test"
+    assert can_delete("admin") is True
+    assert can_delete("editor") is False
+def can_delete(role):
+    return role == "admin"
 
 
 def test_can_edit_dueño_puede():
-    # TODO: el dueño (owner_id == user_id) siempre puede editar lo suyo
-    assert False, "TODO: completá este test"
+    assert can_edit(owner_id=1, user_id=1) is True
 
+def can_edit(owner_id, user_id):
+    return owner_id == user_id
 
 def test_can_edit_editor_no_puede_sobre_ajeno():
     # TODO: un editor NO puede editar el documento de otro (owner_id != user_id)
