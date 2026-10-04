@@ -99,14 +99,12 @@ def require_role(required: Role) -> Callable:
                 ("No tenés el rol necesario para esta operación").
            SÍ → devolvé `current_user` (los endpoints lo usan).
     """
+    
     def checker(
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ (reemplaza/envolvé el return de abajo):
-        #    if current_user.role != required:
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        if current_user.role != required:
+            raise HTTPException(status_code=403, detail="Rol no necesario para la operacion")
         return current_user
     return checker
 
@@ -141,12 +139,9 @@ def require_scope(required: str) -> Callable:
         request: Request,
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ:
-        #    payload = request.state.token_payload
-        #    token_scope = payload.get("scope", "")
-        #    if required not in token_scope.split():
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        payload = request.state.token_payload
+        token_scope = payload.get("scope", "")
+        if required not in token_scope.split():
+            raise HTTPException(status_code=403, detail="")
         return current_user
     return checker
