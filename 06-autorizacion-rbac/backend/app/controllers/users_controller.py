@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api", tags=["2 · Usuarios (admin)"])
 
 @router.get("/users", response_model=list[UserRead])
 def list_users(
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
+    current_user: User = Depends(require_role(Role.ADMIN))
 ):
     """Lista los usuarios de TU empresa (el storage filtra por tu tenant)."""
     return storage.list_users(tenant_id=current_user.tenant_id)
@@ -46,9 +46,14 @@ def get_user(
     """Detalle de un usuario. 404 si no existe; 403 si es de otra empresa."""
     user = storage.get_user_by_id(user_id)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
-    # 🔓 TODO (tenancy): si user.tenant_id != current_user.tenant_id → 403.
-    #    Un admin de Acme NO puede ver a un usuario de Globex.
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Usuario no encontrado"
+            )
+    if user.tenant_id != current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+    )
     return user
 
 
@@ -56,7 +61,7 @@ def get_user(
 def change_role(
     user_id: int,
     body: RoleChange,
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
+    current_user: User = Depends(require_role(Role.ADMIN))
 ):
     """Cambia el rol de un usuario (la operación más sensible del sistema).
 
@@ -65,7 +70,15 @@ def change_role(
     """
     user = storage.get_user_by_id(user_id)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
-    # 🔓 TODO (tenancy): si user.tenant_id != current_user.tenant_id → 403.
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Usuario no encontrado"
+            )
+
+    if user.tenant_id != current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            )
+   
     updated = storage.set_user_role(user_id, body.role)
     return updated
