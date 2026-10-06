@@ -176,7 +176,7 @@ def delete_task(task_id: int):
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "Funciona", "service": "mi-primera-app-backend", "tasks_count": len(tasks)}
+    return {"status": "ok", "service": "mi-primera-app-backend", "tasks_count": len(tasks)}
 
 
 # ============================================================

@@ -107,6 +107,11 @@ def require_role(required: Role) -> Callable:
         #    if current_user.role != required:
         #        raise HTTPException(status_code=403, detail=...)
         # ─────────────────────────────────────────────────────────────
+        if current_user.role != required:
+            raise HTTPException(
+                status_code=403,
+                detail="No tenes el rol necesario para esta operacion"
+            )
         return current_user
     return checker
 
@@ -148,5 +153,13 @@ def require_scope(required: str) -> Callable:
         #    if required not in token_scope.split():
         #        raise HTTPException(status_code=403, detail=...)
         # ─────────────────────────────────────────────────────────────
+        
+        payload = request.state.token_payload
+        token_scope = payload.get("scope", "")
+        if required not in token_scope.split():
+            raise HTTPException(
+                status_code=403,
+                detail="El token no tiene el scope necesario para esta operación"
+                )
         return current_user
     return checker
