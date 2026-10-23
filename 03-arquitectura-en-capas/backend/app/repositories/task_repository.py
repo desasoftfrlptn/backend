@@ -14,7 +14,6 @@ Pistas rápidas (desarrollalas — el GUIA_ALUMNO tiene las consignas):
 """
 
 from sqlmodel import Session, select
-
 from app.models.task import Task, TaskUpdate
 
 
@@ -26,23 +25,35 @@ class TaskRepository:
 
     def list_all(self) -> list[Task]:
         """Devuelve todas las tareas ordenadas por id."""
-        raise NotImplementedError("TODO: implementar list_all")
+        statement = select(Task).order_by(Task.id)
+        return self.session.exec(statement).all()
 
     def get_by_id(self, task_id: int) -> Task | None:
         """Devuelve una tarea por id, o None si no existe."""
-        raise NotImplementedError("TODO: implementar get_by_id")
+        return self.session.get(Task, task_id)
 
     def create(self, title: str) -> Task:
         """Crea una tarea y devuelve la instancia persistida (con id y fecha)."""
-        raise NotImplementedError("TODO: implementar create")
+        task = Task(title=title)
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+        return task
 
     def update(self, task: Task, data: TaskUpdate) -> Task:
         """Actualiza SOLO los campos enviados y devuelve la tarea."""
-        raise NotImplementedError("TODO: implementar update")
+        update_data = data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(task, key, value)
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+        return task
 
     def delete(self, task: Task) -> None:
         """Borra la tarea de la base."""
-        raise NotImplementedError("TODO: implementar delete")
+        self.session.delete(task)
+        self.session.commit()
 
     def count(self) -> int:
         # EJEMPLO resuelto — te sirve de referencia para los demás.

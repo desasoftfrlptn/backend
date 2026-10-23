@@ -103,6 +103,7 @@ estándar actual. Lo vas a usar hoy.
 
 ## 3. Sesiones: ¿cómo "recuerdo" quién sos entre requests?
 
+
 HTTP es **stateless** (sin estado): cada request es independiente. El server
 no recuerda nada entre uno y otro. Entonces, ¿cómo sabe que "este request es
 de Juan, que ya se logueó"?
