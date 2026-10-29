@@ -41,47 +41,33 @@ import type { DocumentRead, Role } from "./types";
  * ("read" | "read write") y lo limita el LOGIN, no el rol:
  * un admin puede loguearse con scope "read" y quedar SOLO LECTURA.
  */
-export function scopeAllowsWrite(scope: string | undefined): boolean {
-  // 🔓 TODO: "read write" contiene "write"; "read" no.
-  //   pista: scope?.split(" ").includes("write")
-  return true;
-}
+export const scopeAllowsWrite = (scope: string | undefined): boolean => {
+  // Verificamos si el scope existe y contiene "write"
+  if (!scope) return false;
+  return scope.split(" ").includes("write");
+};
 
-/** ¿Puede ver el panel de usuarios (GET /api/users)? Solo admin. */
-export function canManageUsers(role: Role | undefined): boolean {
-  // 🔓 TODO: role === "admin"
-  return true;
-}
+export const canManageUsers = (role: Role | undefined): boolean => {
+  // Solo los administradores gestionan la lista de usuarios
+  return role === "admin";
+};
 
-/** ¿Puede cambiar el rol de otro usuario (PATCH /users/{id}/role)? Solo admin. */
-export function canChangeRole(role: Role | undefined): boolean {
-  // 🔓 TODO: role === "admin"
-  return true;
-}
+export const canChangeRole = (role: Role | undefined): boolean => {
+  // La operación más sensible está restringida estrictamente a administradores
+  return role === "admin";
+};
 
-/** ¿Puede BORRAR documentos (DELETE /api/documents/{id})? Solo admin. */
-export function canDelete(role: Role | undefined): boolean {
-  // 🔓 TODO: role === "admin"
-  return true;
-}
+export const canDelete = (role: Role | undefined): boolean => {
+  // Según la matriz, ni el dueño ni el editor pueden borrar, solo admin
+  return role === "admin";
+};
 
-/**
- * ¿Puede EDITAR un documento? Regla de la matriz:
- *   - el DUEÑO siempre puede (object-level)
- *   - el ADMIN puede editar cualquiera de su empresa
- *   - un editor NO edita el privado de otro → false
- */
-export function canEdit(userId: number, doc: DocumentRead, role: Role | undefined): boolean {
-  // 🔓 TODO: doc.owner_id === userId || role === "admin"
-  return true;
-}
+export const canEdit = (userId: number, doc: any, role: Role | undefined): boolean => {
+  // Object-level: podés editar si sos el dueño exacto del documento, o si sos admin
+  return doc.owner_id === userId || role === "admin";
+};
 
-/**
- * ¿Puede PUBLICAR un documento? Misma regla que editar
- * (dueño o admin) — pero fijate que el viewer queda afuera
- * por su scope "read", que también bloquea la UI con scopeAllowsWrite.
- */
-export function canPublish(userId: number, doc: DocumentRead, role: Role | undefined): boolean {
-  // 🔓 TODO: doc.owner_id === userId || role === "admin"
-  return true;
-}
+export const canPublish = (userId: number, doc: any, role: Role | undefined): boolean => {
+  // Object-level: idéntica lógica que la edición
+  return doc.owner_id === userId || role === "admin";
+};
