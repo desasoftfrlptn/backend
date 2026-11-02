@@ -106,6 +106,30 @@ tasks = session.exec(statement).all()
 
 ---
 
+### 4.4 Cómo se llama esto (y el otro eje)
+
+Lo que construís tiene nombre: **Layered Architecture** (Fowler, *PoEAA*).
+Es una partición **horizontal**: `controllers/`, `services/`, `repositories/`
+agrupan TODO lo HTTP, TODO el negocio y TODO el acceso a datos del sistema.
+
+Dos precisiones que el diagrama lineal no muestra:
+
+1. **`models/` no es una capa del flujo**: lo importan las tres capas. Es un
+   **kernel compartido** (el vocabulario del dominio), no un piso del
+   edificio. La regla "solo conozco la de abajo" aplica al flujo, no a él.
+2. **Capas es UN eje, no EL eje.** El otro es la partición **vertical por
+   feature** (`tasks/`, `projects/`, cada una con sus 3 capas adentro) —
+   *package by feature*. Y **Screaming Architecture** es el criterio de
+   nombres: el árbol de arriba tiene que gritar el **dominio**, no el
+   framework.
+
+> 🧠 Hoy construís **un** eje, a propósito: es el que mejor cuenta el
+> "antes → después" contra el monolito del 02. Saber que existe el otro,
+> y **cuándo** conviene cada uno, es el objetivo conceptual de la clase.
+> El detalle está en `MATERIAL_PREVIO.md` §6.
+
+---
+
 ## 5. El modelo de datos (SQLModel)
 
 Una clase de Python define la tabla (con `table=True`):

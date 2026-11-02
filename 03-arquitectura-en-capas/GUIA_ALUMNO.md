@@ -280,6 +280,12 @@ con el flujo feliz + casos límite, y preparate para responder en voz alta:
 2. ¿Dónde vive el 404 y por qué no en el service?
 3. ¿Qué SQL que escribías a mano en el 02 ahora escribe el ORM?
 4. ¿Qué te da TypeScript que JavaScript no te daba?
+5. **¿Cómo se llama el patrón que construiste y qué OTRO eje de partición
+   existe?** (pista: mirá la última slide y `MATERIAL_PREVIO.md` §6)
+
+> La 5 no se resuelve escribiendo código: se resuelve entendiendo que
+> "capas" es **una** decisión de diseño, no la única. Si podés decir en una
+> frase cuándo conviene el eje vertical, la clase valió la pena.
 
 ---
 

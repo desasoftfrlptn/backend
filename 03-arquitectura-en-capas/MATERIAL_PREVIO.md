@@ -204,6 +204,115 @@ compila** y te lo dice en el editor. Eso es seguridad que JavaScript no te da.
 
 ---
 
+## 6. Esto tiene nombre: *Layered Architecture* (y el eje que no usamos)
+
+> Esta sección es **mapa, no taller**. No la vas a construir hoy. La leés
+> para saber **cómo se llama** lo que sí vas a construir, y para saber que
+> hay más de una forma de organizar el mismo sistema.
+
+Lo que vas a armar en clase es **Layered Architecture**: el patrón que
+divide el sistema en capas horizontales donde cada una solo habla con la
+de abajo. Martin Fowler lo formalizó en *Patterns of Enterprise Application
+Architecture* como "Layered Architecture" (también se lo llama N-tier).
+
+### 6.1 Capas es UN eje, no EL eje
+
+Hay dos formas de partir el mismo sistema:
+
+**Partición HORIZONTAL — por capa técnica** (lo que construís hoy):
+
+```
+app/
+├── controllers/   ← TODO lo HTTP del sistema
+├── services/      ← TODO el negocio del sistema
+├── repositories/  ← TODO el acceso a datos
+└── models/        ← TODO el vocabulario compartido
+```
+
+**Partición VERTICAL — por feature** (package by feature):
+
+```
+app/
+├── tasks/
+│   ├── controller.py
+│   ├── service.py
+│   ├── repository.py
+│   └── schemas.py
+├── projects/
+│   └── ...
+└── shared/          ← db, config: el kernel compartido
+```
+
+Fijate que **por feature no desaparecen las capas**: cada feature tiene
+adentro su controller, su service y su repository. Cambia **el eje de
+agrupación**, no la cantidad de capas.
+
+### 6.2 El test del cambio (la forma de decidir sin religión)
+
+El mejor argumento no es teórico, es medible:
+
+> **Agregá una segunda feature (`projects`) y contá cuántos archivos y
+> carpetas tocás en cada layout.**
+
+| Pregunta | Por capa (horizontal) | Por feature (vertical) |
+|----------|----------------------|------------------------|
+| Agregar `projects` | tocás 4 carpetas (una por capa) | tocás 1 carpeta |
+| "¿Qué hace el sistema?" | hay que leer todo | el árbol lo grita |
+| Reusar algo entre features | fácil (ya está separado) | cuidado: `shared/` se vuelve basurero |
+| Un equipo por feature | pisa archivos ajenos | cada equipo en su carpeta |
+| App CRUD chica, 2 personas | simple y directo | ceremonia innecesaria |
+
+**Ninguna gana siempre.** Con un dominio chico y un solo equipo, por capa
+es más simple. Con un dominio que crece, varias features y varios equipos,
+el eje vertical paga solo (menos conflictos de merge, mejor localidad del
+cambio, camino natural a microservicios).
+
+### 6.3 Screaming Architecture
+
+Es un **criterio de nombres**, no otra estructura. La pregunta es: cuando
+alguien abre la carpeta raíz, ¿qué grita?
+
+```
+# Grita FRAMEWORK (mal)
+app/  routers/  models/  utils/
+
+# Grita DOMINIO (bien)
+app/  tasks/  projects/  billing/  shared/
+```
+
+Robert C. Martin lo llama *Screaming Architecture*: la estructura tiene
+que gritar **los casos de uso del negocio**, no el framework con el que lo
+implementaste. Si mañana cambiás FastAPI por Django, el árbol del dominio
+no debería moverse.
+
+### 6.4 ¿Y el escalón siguiente?
+
+**Hexagonal (Ports & Adapters)** y **Clean Architecture** son el paso
+siguiente: ahí la regla deja de ser "conozco la capa de abajo" y pasa a ser
+"el negocio **no conoce** la base ni el framework". El service depende de
+una **interfaz** (puerto) y el repositorio es un **adaptador** que la
+implementa. Eso es lo que permite testear el negocio sin base de datos.
+
+Hoy usás Inyección de Dependencias con `Depends()`, pero el service sigue
+dependiendo de una **clase concreta** (`TaskRepository`), no de una
+abstracción. Esa es la diferencia exacta entre "capas" y "hexagonal".
+
+> 🧠 **La lección de esta sección**: aprender un layout no es aprender
+> arquitectura. Aprender arquitectura es saber **qué eje elegir, por qué, y
+> qué costo tiene**. El día que defiendas una decisión en una entrevista,
+> no vas a decir "usé capas porque es mejor": vas a decir "usé capas porque
+> el dominio era chico y el equipo era uno; si crecía, pasaba a features".
+
+### 📚 Para profundizar en este tema
+
+- 📖 **Martin Fowler — *Patterns of Enterprise Application Architecture***: el capítulo de Layered Architecture. La definición canónica del patrón que usás hoy.
+- 🔗 **[Package by feature, not by layer](https://phauer.com/2021/package-by-feature/)** — el artículo que mejor explica el eje vertical con ejemplos.
+- 🔗 **[Screaming Architecture (Uncle Bob)](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html)** — por qué el árbol tiene que gritar el dominio.
+- 🔗 **[Hexagonal Architecture (Alistair Cockburn)](https://alistair.cockburn.us/hexagonal-architecture/)** — puertos y adaptadores, el escalón siguiente.
+- 🎬 **ArjanCodes — [canal](https://www.youtube.com/@ArjanCodes)**: comparaciones prácticas entre "por capa" y "por feature" en Python.
+
+---
+
 ## Autoevaluación (hacela antes de venir)
 
 Respondé mentalmente. Si dudás, releé la sección:
@@ -214,6 +323,8 @@ Respondé mentalmente. Si dudás, releé la sección:
 4. ¿Qué es un ORM y cuál es la diferencia con el SQL crudo del Módulo 02?
 5. En SQLModel, ¿qué significa `table=True`?
 6. ¿Qué ventaja te da TypeScript frente a JavaScript?
+7. ¿Cómo se llama el patrón que vas a construir y qué otro eje de partición existe?
+8. ¿Qué preguntarías para decidir entre "por capa" y "por feature"?
 
 ---
 

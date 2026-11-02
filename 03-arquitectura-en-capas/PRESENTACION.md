@@ -20,10 +20,12 @@ style: |
   em { color: #cbd5e1; }
   a { color: #93c5fd; }
 
-  /* ---- Slides densas: reducimos todo un escalón ---- */
-  section.smaller { font-size: 0.92em; }
-  section.smaller h1 { font-size: 1.4em; }
-  section.smaller h2 { font-size: 1.15em; }
+  /* ---- Slides densas: un escalón SUAVE (0.95, no 0.92) ----
+     Ojo: `smaller` se multiplica con pre/table. Antes
+     0.92 x 0.82 x 29px = 21.9px de código -> chico en proyector. */
+  section.smaller { font-size: 0.95em; }
+  section.smaller h1 { font-size: 1.45em; }
+  section.smaller h2 { font-size: 1.2em; }
 
   /* ---- Código ---- */
   code {
@@ -31,16 +33,20 @@ style: |
     background: #1e293b;
     padding: 2px 6px;
     border-radius: 4px;
-    font-size: 0.85em;
+    font-size: 0.88em;
   }
   pre {
     background: #1e293b;
     border: 1px solid #334155;
     border-radius: 8px;
     padding: 10px 16px;
-    font-size: 0.82em;
+    font-size: 0.88em;
     line-height: 1.35;
     color: #e2e8f0;
+    /* Red de seguridad: si una línea es muy larga se envuelve,
+       nunca se recorta (el overflow de Marp corta el texto en silencio). */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   pre code {
     background: none;
@@ -61,7 +67,10 @@ style: |
 
   /* ---- Tablas ---- */
   table {
-    font-size: 0.8em;
+    /* Marp pone display:block + width:max-content: el fondo ocupa 100%
+       pero las columnas no se estiran y queda un bloque muerto. */
+    display: table;
+    font-size: 0.85em;
     background: #1e293b;
     border-radius: 8px;
     overflow: hidden;
@@ -132,8 +141,13 @@ style: |
   }
   section.desbloqueo h1 { color: #fca5a5; font-size: 1.6em; }
 
+  /* ---- Checklists de checkpoint: el bullet ES el checkbox ----
+     Marp NO convierte "- [ ]" en checkbox: lo deja como texto "[ ]",
+     y encima el ::before de ul le agrega "▸ " -> se ve "▸ [ ]". */
+  section.check ul li::before { content: "☐  "; color: #34d399; font-weight: 700; }
+
   /* ---- Footer ---- */
-  footer { color: #64748b; font-size: 0.6em; }
+  footer { color: #64748b; font-size: 0.65em; }
 ---
 
 <!-- _class: lead -->
@@ -218,10 +232,8 @@ El `main.py` del Módulo 02, **casi 300 líneas**, mezclaba todo:
 # modelos Pydantic
 class TaskCreate(BaseModel): ...
 class Task(BaseModel): ...
-
 # pool de conexiones
 pool = ConnectionPool(...)
-
 # SQL crudo DENTRO de los endpoints
 @app.post("/api/tasks")
 def create_task(body: TaskCreate):
@@ -412,7 +424,8 @@ curl http://localhost:8000/api/health
 ```
 
 ```json
-{ "status": "Funciona", "service": "03-...", "db": "conectada", "tasks_count": 0 }
+{ "status": "Funciona", "service": "03-...",
+  "db": "conectada", "tasks_count": 0 }
 ```
 
 > El health **ya funciona** — es el ejemplo vivo que les dejamos en el scaffold.
@@ -420,7 +433,7 @@ curl http://localhost:8000/api/health
 
 ---
 
-<!-- _class: checkpoint -->
+<!-- _class: checkpoint check -->
 <!-- note: |
   Checkpoint 1: todos con server arriba y health respondiendo.
   Recorrer el aula, desbloquear. No avanzar si alguien no llegó.
@@ -429,22 +442,22 @@ curl http://localhost:8000/api/health
 
 ## ✅ Checkpoint 1 — Scaffold arriba
 
-- [ ] `uv sync` sin errores
-- [ ] `uv run -m app.main` corriendo
-- [ ] `/api/health` responde `db: "conectada"`
-- [ ] `/docs` muestra la API
+- `uv sync` sin errores
+- `uv run -m app.main` corriendo
+- `/api/health` responde `db: "conectada"`
+- `/docs` muestra la API
 
 ---
 
 <!-- _class: fase -->
 <!-- note: |
-  Fase 1: repository. Los 6 métodos con el ORM.
-  Pistas si se traban: "¿cómo leés una fila por id? session.get(Task, id)"
-  "¿cómo aplicás solo los campos que vinieron? model_dump(exclude_unset=True)"
-  Timing: actividad 5-20 min
+  Fase 1: repository. Primero los métodos de LECTURA, después los de
+  escritura. Pista si se traban: "¿cómo leés una fila por id?
+  session.get(Task, id)".
+  Timing: actividad 5-12 min
 -->
 
-## Fase 1 — Repository (15 min)
+## Fase 1 — Repository: leer (15 min)
 
 Completá `app/repositories/task_repository.py`:
 
@@ -452,22 +465,41 @@ Completá `app/repositories/task_repository.py`:
 class TaskRepository:
     def __init__(self, session: Session):
         self.session = session
-    def list_all(self) -> list[Task]:        # select(Task) + order_by
-        ...
-    def get_by_id(self, task_id: int) -> Task | None:  # session.get(Task, id)
-        ...
-    def create(self, title: str) -> Task:    # add + commit + refresh
-        ...
-    def update(self, task, data) -> Task:    # model_dump(exclude_unset=True)
-        ...
-    def delete(self, task: Task) -> None:    # delete + commit
-        ...
-    def count(self) -> int:                  # ejemplo resuelto
-        ...
+    def list_all(self) -> list[Task]:
+        ...                  # select(Task) + order_by
+    def get_by_id(self, task_id: int) -> Task | None:
+        ...                  # session.get(Task, id)
+    def count(self) -> int:
+        ...                  # ejemplo resuelto
 ```
 
 > `select(Task)` reemplaza al `SELECT * FROM tasks` del Módulo 02.
 > El `session.get()` reemplaza al `WHERE id = %s`.
+
+---
+
+<!-- _class: fase -->
+<!-- note: |
+  Fase 1 (2/2): los 3 métodos de escritura. Pista clave:
+  "¿cómo aplicás solo los campos que vinieron? model_dump(exclude_unset=True)".
+  Timing: actividad 12-20 min
+-->
+
+## Fase 1 — Repository: escribir
+
+```python
+    def create(self, title: str) -> Task:
+        ...                  # add + commit + refresh
+
+    def update(self, task, data) -> Task:
+        ...                  # model_dump(exclude_unset=True)
+
+    def delete(self, task: Task) -> None:
+        ...                  # delete + commit
+```
+
+> `exclude_unset=True` es la clave del PATCH: **solo** pisa los campos
+> que vinieron en el body. Sin eso, borrás datos sin querer.
 
 ---
 
@@ -487,10 +519,8 @@ Completá `app/services/task_service.py`:
 class TaskService:
     def __init__(self, repository: TaskRepository):
         self.repository = repository
-
     def create_task(self, body: TaskCreate) -> Task:
-        return self.repository.create(body.title.strip())   # regla de negocio
-
+        return self.repository.create(body.title.strip())   # negocio
     def update_task(self, task_id, body) -> Task | None:
         task = self.repository.get_by_id(task_id)
         if task is None:
@@ -519,7 +549,7 @@ Completá `app/controllers/task_controller.py`:
 def get_task(task_id: int, service: TaskService = Depends(get_task_service)):
     task = service.get_task(task_id)
     if task is None:
-        raise HTTPException(status_code=404, detail=f"Tarea {task_id} no encontrada")
+        raise HTTPException(404, detail=f"Tarea {task_id} no existe")
     return task
 ```
 
@@ -529,12 +559,11 @@ def get_task(task_id: int, service: TaskService = Depends(get_task_service)):
 | `/api/tasks` | POST | `status_code=201` |
 | `/api/tasks/{id}` | GET / PATCH / DELETE | `None` → `404` |
 
-> El controller es el único que "habla HTTP". Traduce `None` → `404`,
-> `Task` → JSON. Ni una línea de SQL ni de regla de negocio acá.
+> El controller es el único que "habla HTTP": traduce `None` → `404`. Cero SQL acá.
 
 ---
 
-<!-- _class: checkpoint -->
+<!-- _class: checkpoint check -->
 <!-- note: |
   Checkpoint 2: CRUD completo. Pedir que prueben los 6 curls del flujo feliz.
   Verificar el strip del título y el 404.
@@ -544,19 +573,22 @@ def get_task(task_id: int, service: TaskService = Depends(get_task_service)):
 ## ✅ Checkpoint 2 — CRUD completo por capas
 
 ```bash
-curl -X POST http://localhost:8000/api/tasks -H "Content-Type: application/json" \
-  -d '{"title":"  Probar capas  "}'      # → "Probar capas" (¡strip del service!)
+curl -X POST http://localhost:8000/api/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"  Probar capas  "}'   # → "Probar capas" (¡strip!)
 
 curl http://localhost:8000/api/tasks
 curl http://localhost:8000/api/tasks/1
-curl -X PATCH http://localhost:8000/api/tasks/1 -H "Content-Type: application/json" -d '{"completed":true}'
-curl -X PATCH http://localhost:8000/api/tasks/1 -H "Content-Type: application/json" -d '{"title":"Editado"}'
+curl -X PATCH http://localhost:8000/api/tasks/1 \
+  -H "Content-Type: application/json" -d '{"completed":true}'
+curl -X PATCH http://localhost:8000/api/tasks/1 \
+  -H "Content-Type: application/json" -d '{"title":"Editado"}'
 curl http://localhost:8000/api/tasks/999    # → 404
 curl -X DELETE http://localhost:8000/api/tasks/1
 ```
 
-- [ ] El `strip()` normaliza el título (regla de negocio en el service)
-- [ ] El `404` funciona (traducción del controller)
+- El `strip()` normaliza el título (regla de negocio en el service)
+- El `404` funciona (traducción del controller)
 
 ---
 
@@ -569,15 +601,12 @@ curl -X DELETE http://localhost:8000/api/tasks/1
 
 ## Fase 4 — Frontend TypeScript (10 min)
 
-Ya viene **completo**. Levantalo y verificá:
+Ya viene **completo**. Levantalo y hacé el CRUD desde la UI:
 
 ```bash
 cd ../frontend
-pnpm install
-pnpm dev          # :5173
+pnpm install && pnpm dev        # :5173
 ```
-
-Abrí `http://localhost:5173` → hacé el CRUD completo desde la UI.
 
 ```typescript
 // src/types.ts — el contrato de la API, como TIPO
@@ -590,11 +619,11 @@ export interface Task {
 ```
 
 > Este `interface` es el `TaskRead` del backend, pero en TypeScript.
-> Ahora el compilador te avisa si escribís mal un campo. Antes, JavaScript callaba.
+> El compilador te avisa si escribís mal un campo. Antes, JS callaba.
 
 ---
 
-<!-- _class: checkpoint -->
+<!-- _class: checkpoint check -->
 <!-- note: |
   Checkpoint 3: frontend integrado.
   Timing: actividad ~50 min
@@ -602,9 +631,9 @@ export interface Task {
 
 ## ✅ Checkpoint 3 — Frontend integrado
 
-- [ ] CRUD completo desde la UI (crear, editar, toggle, eliminar)
-- [ ] `types.ts` refleja el contrato del backend
-- [ ] Errores de tipo los atrapa el compilador, no el navegador
+- CRUD completo desde la UI (crear, editar, toggle, eliminar)
+- `types.ts` refleja el contrato del backend
+- Errores de tipo los atrapa el compilador, no el navegador
 
 ---
 
@@ -631,6 +660,49 @@ export interface Task {
 
 > **Regla**: no des la respuesta. Hacé la pregunta que la destraba.
 > *"¿Eso es HTTP o es negocio?"* resuelve la mitad de las dudas.
+
+---
+
+<!-- _class: smaller -->
+<!-- note: |
+  ESTA slide abre la próxima clase. No la saltees: convierte "aprendí un
+  layout" en "entiendo un criterio". Tres tiempos:
+  1. Lo que construyeron tiene nombre: Layered Architecture (Fowler, PoEAA).
+  2. Capas es UN eje; el otro es por FEATURE (partición vertical).
+  3. Screaming = el top-level grita el dominio; Hexagonal = escalón siguiente.
+  Cerrá con la pregunta del cambio: "agregá `projects` y contá los archivos
+  que tocás en cada layout". Eso se responde en 30 segundos y no se olvida.
+  Timing: cierre 50-55 min
+-->
+
+## Esto que construyeron tiene nombre
+
+**Layered Architecture** (Fowler, *PoEAA*) — paquete **por capa técnica**.
+Es lo que acabás de armar:
+
+```
+app/  controllers/  services/  repositories/  models/
+```
+
+El **otro eje** posible: paquete **por feature** (partición vertical):
+
+```
+app/  tasks/{controller,service,repository}.py
+      projects/{...}
+      shared/     (db, config — el kernel)
+```
+
+| Pregunta | Por capa | Por feature |
+|----------|----------|-------------|
+| Agregar `projects` | tocás 4 carpetas | tocás 1 carpeta |
+| "¿Qué hace el sistema?" | no se ve | grita: tasks, projects |
+| Reusar entre features | fácil | cuidado: `shared/` se vuelve basurero |
+
+> **Screaming Architecture**: el árbol grita el **dominio**, no el framework.
+> **Hexagonal** es el escalón siguiente: puertos (el service depende de una
+> abstracción, no de una clase concreta).
+> **No es dogma**: dominio chico → simplificá. Dominio que crece y varios
+> equipos → el eje vertical paga solo.
 
 ---
 

@@ -28,15 +28,19 @@ conocer eso?"* o *"¿eso es HTTP o es negocio?"*.
 2. **Verificá** la lectura al inicio con un quiz de 3 preguntas (las tenés en
    la presentación, slide 2). No es evaluación: es para activar el cerebro y
    detectar quién no leyó.
-3. **Prepará el scaffold**: el repo de este módulo ya tiene el código
-   completo. Para el taller entregás una versión **incompleta** donde los
-   alumnos escriben solo tres archivos (ver sección 4). La forma más simple:
-   compartir el repo completo y decir "no miren la solución todavía — solo
-   la usan si se traban".
+3. **Prepará el scaffold**: `main` ya trae la versión **incompleta** (los
+   tres archivos con `NotImplementedError`). No hay que "desarmar" nada.
+   La versión completa vive en la rama **`solucion`**, que liberás al final.
 
-> 💡 **Consejo**: si usás GitHub Classroom o un repo base, entregá el scaffold
-> incompleto como punto de partida y guardá el código completo en una rama
-> `solucion` que desbloqueás al final.
+> ⚠️ **Verificá ANTES de clase** que la rama `solucion` tenga el código:
+> ```bash
+> git fetch origin
+> git diff --stat main..origin/solucion -- 03-arquitectura-en-capas
+> ```
+> Tiene que mostrar los 3 archivos con cambios. Si da vacío, la rama está
+> rota (pasó una vez: el commit que dejó los stubs en `main` se mergeó a
+> `solucion`). Restáurala desde `33556ee` antes de entrar al aula — si no,
+> los alumnos hacen `git diff main..origin/solucion` y no ven nada.
 
 ---
 
@@ -145,6 +149,16 @@ Cerrá con estas preguntas al grupo entero (5 min, responden en voz alta):
    `select(Task)` reemplaza el `SELECT * FROM tasks`.
 4. **"¿Qué te da TypeScript que JavaScript no te daba?"** → errores en tiempo
    de compilación, no en runtime.
+5. **"¿Cómo se llama el patrón que construyeron?"** → *Layered Architecture*.
+   Y la que abre la próxima: **"¿qué otro eje de partición existe?"** →
+   por feature (vertical). Pediles el **test del cambio**: "agregá `projects`
+   y contá cuántas carpetas tocás en cada layout". Con eso se dan cuenta
+   solos de que la arquitectura es una **decisión con costo**, no un dogma.
+
+> La slide "Esto que construyeron tiene nombre" es la bisagra entre esta
+> clase y el módulo `03.5` (feature-based / screaming / hexagonal). Si el
+> tiempo aprieta, **no la saltees**: es lo único de la clase que enseña a
+> elegir, en lugar de repetir.
 
 Terminá con la frase: *"Hoy no escribieron una API nueva — la REORGANIZARON
 para que el día de mañana, cuando crezca, no se caiga."*
@@ -175,6 +189,10 @@ para que el día de mañana, cuando crezca, no se caiga."*
 - 🔴 ¿Qué harías para que el service lance una excepción de dominio
   (`TaskNotFoundError`) en lugar de devolver `None`? ¿Dónde la traducirías a
   404? Investiga `app.add_exception_handler`.
+- 🔴 **El test del eje**: reorganizá `app/` en `features/tasks/` +
+  `shared/` y agregá una feature `projects` en AMBOS layouts (por capa y por
+  feature). Contá archivos tocados, conflictos de merge y tiempo. Escribí
+  media carilla con la decisión y el costo. Ese texto vale más que el CRUD.
 
 ---
 
