@@ -33,6 +33,9 @@ class TaskService:
 
     def update_task(self, task_id: int, body: TaskUpdate) -> Task | None:
         # Pista: si no existe, devolvé None. Si existe, actualizá.
+        # OJO: el PATCH también normaliza el título (la MISMA regla que
+        # create). Si no lo hacés, `PATCH {"title": "  x  "}` guarda los
+        # espacios y la regla de negocio queda a medias.
         raise NotImplementedError("TODO: implementar update_task")
 
     def delete_task(self, task_id: int) -> bool:

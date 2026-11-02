@@ -13,6 +13,7 @@ Pistas rápidas (desarrollalas — el GUIA_ALUMNO tiene las consignas):
   - borrar            → session.delete(task) + commit()
 """
 
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from app.models.task import Task, TaskUpdate
@@ -46,5 +47,8 @@ class TaskRepository:
 
     def count(self) -> int:
         # EJEMPLO resuelto — te sirve de referencia para los demás.
-        statement = select(Task)
-        return len(self.session.exec(statement).all())
+        # El conteo lo hace la BASE (`SELECT count(*) FROM tasks`), no
+        # Python. Traer todas las filas para contarlas con len() es el
+        # error clásico: funciona con 10 tareas y se cae con 100.000.
+        statement = select(func.count()).select_from(Task)
+        return self.session.exec(statement).one()
