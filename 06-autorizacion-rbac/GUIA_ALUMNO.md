@@ -318,10 +318,26 @@ Según el resultado de la verificación, se agenda tu defensa oral individual
 (5 min). Preparate para:
 
 1. **Correr el script en vivo** y mostrar los checks verdes.
+
 2. Explicar **tres decisiones de diseño** (tabla de la SPEC, sección 8):
    - ¿Por qué `401` ≠ `403` en tu código?
+      El 401 es cuando no estás logueado o el token no sirve.
+      El 403 es cuando ya estás logueado, pero no tenés permiso para hacer eso.
+
+      Por ejemplo, si soy viewer puedo entrar, pero si quiero borrar algo me tira 403.
+
    - ¿Por qué el rol se lee de storage y el scope del token?
+      Porque el rol puede cambiar. Si antes era editor y el admin me cambia a viewer, la próxima vez que haga algo se vuelve a consultar la base y ya aparece como viewer.
+
+      El scope en cambio viene en el token que ya tengo.
+
    - ¿Por qué el 404 va antes que el 403?
+      Primero veo si el documento existe.
+
+      Si no existe, 404.
+
+      Si existe, ahí veo si tengo permiso para acceder. Si existe pero no puedo acceder, 403.
+
 3. **Revisión de código**: con el resultado del script como guía, revisás
    tus implementaciones de `require_role`, `require_scope`, el object-level
    y los helpers de `authz.ts`.
@@ -346,3 +362,11 @@ git diff main..origin/solucion -- 06-autorizacion-rbac/
 > **La gracia de la entrega está en descubrirlo vos.** Copiar sin entender
 > te deja solo con un script que pasa y una defensa oral que no vas a poder
 > sostener ni un minuto.
+
+Durante la verificacion con los scripts adjuntados, modifique:
+
+* En `scripts/verificar_authz.sh` cambie dueño por dueno y No debería por No deberia, tiraba ese error cuando ejecutaba y me volvi 🤪!!!
+* En `frontend/src/components/LoginPanel.tsx` modifique
+ setRegMessage(\${res.status}: ${res.detail}` ?? "Error");
+ por
+ setRegMessage(`${res.status}: ${res.detail || "Error"}`);, porque pnpm build me tiraba error, no podia ver porque paso iba y lo busque con la IA, no entendia que me tiraba error. Aunque vi que otros compañeros tuvieron el mismo problema, tambien lo consulte con ellos.

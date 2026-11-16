@@ -102,11 +102,14 @@ def require_role(required: Role) -> Callable:
     def checker(
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ (reemplaza/envolvé el return de abajo):
-        #    if current_user.role != required:
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        # Comparo el rol del usuario actual contra el rol que pide el endpoint
+        if current_user.role != required:
+            # No coinciden → no tiene permiso → corto acá con un 403 (Forbidden)
+            raise HTTPException(
+                status_code=403,
+                detail="No tenés el rol necesario para esta operación",
+            )
+        # Si el if no se disparó, el rol coincide → dejo pasar al usuario
         return current_user
     return checker
 
@@ -141,12 +144,18 @@ def require_scope(required: str) -> Callable:
         request: Request,
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ:
-        #    payload = request.state.token_payload
-        #    token_scope = payload.get("scope", "")
-        #    if required not in token_scope.split():
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        # Saco el payload del token que get_current_user guardó antes
+        payload = request.state.token_payload
+        # Saco el string de scope del payload (ej: "read write"), o "" si no hay
+        token_scope = payload.get("scope", "")
+        # .split() convierte "read write" en ["read", "write"]
+        # pregunto si el scope pedido NO está en esa lista
+        if required not in token_scope.split():
+            # No lo tiene → no puede hacer esta operación → 403
+            raise HTTPException(
+                status_code=403,
+                detail="El token no tiene el scope necesario para esta operación",
+            )
+        # Si el if no se disparó, el scope alcanza → dejo pasar
         return current_user
     return checker

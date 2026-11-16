@@ -112,7 +112,7 @@ NEWDOC=$(curl -s -X POST "$BASE/api/documents" -H "Authorization: Bearer $TOKEN_
 NEWDOC_ID=$(json_id "$NEWDOC")
 check "201" "$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/documents" -H "Authorization: Bearer $TOKEN_EDITOR" -H "Content-Type: application/json" -d '{"title":"Otro draft","content":"x"}')" "puede CREAR documento (scope write)"
 check "200" "$(status -X POST "$BASE/api/documents/$NEWDOC_ID/publish" -H "Authorization: Bearer $TOKEN_EDITOR")" "puede PUBLICAR su propio documento"
-check "200" "$(status -X PATCH "$BASE/api/documents/$NEWDOC_ID" -H "Authorization: Bearer $TOKEN_EDITOR" -H "Content-Type: application/json" -d '{"content":"editado por el dueño"}')" "puede EDITAR su propio documento"
+check "200" "$(status -X PATCH "$BASE/api/documents/$NEWDOC_ID" -H "Authorization: Bearer $TOKEN_EDITOR" -H "Content-Type: application/json" -d '{"content":"editado por el dueno"}')" "puede EDITAR su propio documento"
 check "403" "$(status -X PATCH "$BASE/api/documents/2" -H "Authorization: Bearer $TOKEN_EDITOR" -H "Content-Type: application/json" -d '{"content":"x"}')" "NO puede editar privado de OTRO (#2)"
 check "403" "$(status -X DELETE "$BASE/api/documents/4" -H "Authorization: Bearer $TOKEN_EDITOR")" "NO puede borrar (solo admin)"
 check "403" "$(status "$BASE/api/users" -H "Authorization: Bearer $TOKEN_EDITOR")" "NO puede listar usuarios"
@@ -145,7 +145,7 @@ echo ""
 echo "── 4 · Scope del TOKEN vs rol del USUARIO ──"
 TOKEN_ADMIN_READONLY=$(login "$EMAIL_ADMIN" "read")
 check "1" "$([ -n "$TOKEN_ADMIN_READONLY" ] && echo 1)" "admin loguea con scope 'read'"
-check "403" "$(status -X POST "$BASE/api/documents" -H "Authorization: Bearer $TOKEN_ADMIN_READONLY" -H "Content-Type: application/json" -d '{"title":"No debería","content":"x"}')" "admin con token read-only NO puede crear (scope < rol)"
+check "403" "$(status -X POST "$BASE/api/documents" -H "Authorization: Bearer $TOKEN_ADMIN_READONLY" -H "Content-Type: application/json" -d '{"title":"No deberia","content":"x"}')" "admin con token read-only NO puede crear (scope < rol)"
 check "200" "$(status "$BASE/api/documents/1" -H "Authorization: Bearer $TOKEN_ADMIN_READONLY")" "admin con token read-only SÍ puede leer"
 check "400" "$(status -X POST "$BASE/api/auth/login" -H "Content-Type: application/json" -d "{\"email\":\"$EMAIL_VIEWER\",\"password\":\"$PASS\",\"scope\":\"read write\"}")" "viewer NO puede pedir scope 'read write' (auto-elevarse)"
 
