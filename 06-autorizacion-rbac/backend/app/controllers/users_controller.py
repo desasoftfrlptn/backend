@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api", tags=["2 · Usuarios (admin)"])
 
 @router.get("/users", response_model=list[UserRead])
 def list_users(
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
+    current_user: User = Depends(require_role(Role.ADMIN)),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
 ):
     """Lista los usuarios de TU empresa (el storage filtra por tu tenant)."""
     return storage.list_users(tenant_id=current_user.tenant_id)
@@ -47,6 +47,10 @@ def get_user(
     user = storage.get_user_by_id(user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+    if user.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se puede consultar por usuarios de otra empresa")
+    # El 404 va antes que el 403 ya primero busca el usuario, si no lo encuentra devuelve 404
+    # si lo encuentra pero el usuario es de otra empresa, devuelve 403
     # 🔓 TODO (tenancy): si user.tenant_id != current_user.tenant_id → 403.
     #    Un admin de Acme NO puede ver a un usuario de Globex.
     return user
@@ -56,7 +60,7 @@ def get_user(
 def change_role(
     user_id: int,
     body: RoleChange,
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
+    current_user: User = Depends(require_role(Role.ADMIN)),  # 🔓 TODO: Depends(require_role(Role.ADMIN))
 ):
     """Cambia el rol de un usuario (la operación más sensible del sistema).
 
@@ -66,6 +70,9 @@ def change_role(
     user = storage.get_user_by_id(user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
+    if user.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se puede modificar el rol de usuarios de otra empresa")
+    #Mismo mecanismo que en get_user, primero 404 si no lo encuentra, si lo encuntra devuelve 403 si son de distinta empresa
     # 🔓 TODO (tenancy): si user.tenant_id != current_user.tenant_id → 403.
     updated = storage.set_user_role(user_id, body.role)
     return updated

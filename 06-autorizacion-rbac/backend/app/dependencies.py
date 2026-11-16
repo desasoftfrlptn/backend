@@ -107,6 +107,10 @@ def require_role(required: Role) -> Callable:
         #    if current_user.role != required:
         #        raise HTTPException(status_code=403, detail=...)
         # ─────────────────────────────────────────────────────────────
+        # Se utiliza 403 y no 401 ya que el usuario si esta autenticado,
+        # pero su rol no alcanza para realizar la operacion 
+        if current_user.role != required:
+            raise HTTPException(status_code=403, detail="No tenes el rol necesario para realizar esta operacion")
         return current_user
     return checker
 
@@ -148,5 +152,10 @@ def require_scope(required: str) -> Callable:
         #    if required not in token_scope.split():
         #        raise HTTPException(status_code=403, detail=...)
         # ─────────────────────────────────────────────────────────────
+        # el scope se lee del TOKEN, un usuario admin con scope de solo lectura no puede
+        # escribir aunque sea admin
+        token_scope = request.state.token_payload.get("scope", "")
+        if required not in token_scope.split():
+            raise HTTPException(status_code=403, detail="El token no tiene el scope necesario para esta operacion")
         return current_user
     return checker
