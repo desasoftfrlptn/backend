@@ -36,9 +36,23 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app import storage
 from app.dependencies import get_current_user, require_role, require_scope
-from app.models import DocumentCreate, DocumentRead, DocumentUpdate, Role, User
+from app.models import Document, DocumentCreate, DocumentRead, DocumentUpdate, Role, User
 
 router = APIRouter(prefix="/api", tags=["3 · Documentos"])
+
+
+def _ensure_same_tenant(doc: Document, current_user: User) -> None:
+    """403 si el documento es de otra empresa (aplica a TODOS, incluso admin)."""
+    if doc.tenant_id != current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="El documento pertenece a otra empresa",
+        )
+
+
+def _is_owner_or_admin(doc: Document, current_user: User) -> bool:
+    """Object-level: el dueño opera sobre lo suyo; el admin, sobre su tenant."""
+    return doc.owner_id == current_user.id or current_user.role == Role.ADMIN
 
 
 @router.post(
@@ -48,7 +62,7 @@ router = APIRouter(prefix="/api", tags=["3 · Documentos"])
 )
 def create_document(
     body: DocumentCreate,
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_scope("write"))
+    current_user: User = Depends(require_scope("write")),
 ):
     """Crea un documento: draft privado a nombre tuyo, en TU empresa.
 
@@ -92,7 +106,15 @@ def get_document(
     doc = storage.get_document(doc_id)
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
-    # 🔓 TU CÓDIGO ACÁ (tenancy + object-level según las reglas de arriba).
+    _ensure_same_tenant(doc, current_user)
+    if doc.visibility == "public":
+        return doc
+    # Privado: conocer el id no da acceso (IDOR). Solo dueño o admin.
+    if not _is_owner_or_admin(doc, current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No podés ver este documento",
+        )
     return doc
 
 
@@ -100,27 +122,39 @@ def get_document(
 def update_document(
     doc_id: int,
     body: DocumentUpdate,
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_scope("write"))
+    current_user: User = Depends(require_scope("write")),
 ):
     """Edita un documento: solo el DUEÑO o un ADMIN de la empresa."""
     doc = storage.get_document(doc_id)
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
-    # 🔓 TODO: tenancy (403 si es de otra empresa).
-    # 🔓 TODO: object-level — ¿dueño o admin? si NO → 403 ("No podés editar este documento").
+    _ensure_same_tenant(doc, current_user)
+    # Aunque el doc sea público, editarlo es solo del dueño o un admin.
+    if not _is_owner_or_admin(doc, current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No podés editar este documento",
+        )
     return storage.update_document(doc_id, body)
 
 
-@router.delete("/documents/{doc_id}", response_model=DocumentRead)
+@router.delete(
+    "/documents/{doc_id}",
+    response_model=DocumentRead,
+    # El scope va acá porque el parámetro ya lo ocupa require_role: un admin
+    # con token de solo lectura tampoco borra.
+    dependencies=[Depends(require_scope("write"))],
+)
 def delete_document(
     doc_id: int,
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_role(Role.ADMIN)) + Depends(require_scope("write"))
+    current_user: User = Depends(require_role(Role.ADMIN)),
 ):
     """Borra un documento: SOLO admin (la matriz exige 403 para editor/viewer)."""
     doc = storage.get_document(doc_id)
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
-    # 🔓 TODO: tenancy — un admin de Acme no borra docs de Globex (403).
+    # Un admin de Acme no borra documentos de Globex.
+    _ensure_same_tenant(doc, current_user)
     deleted = storage.delete_document(doc_id)
     return deleted
 
@@ -128,7 +162,7 @@ def delete_document(
 @router.post("/documents/{doc_id}/publish", response_model=DocumentRead)
 def publish_document(
     doc_id: int,
-    current_user: User = Depends(get_current_user),  # 🔓 TODO: Depends(require_scope("write"))
+    current_user: User = Depends(require_scope("write")),
 ):
     """Publica un documento: el DUEÑO publica lo suyo; el admin, cualquiera.
 
@@ -139,6 +173,10 @@ def publish_document(
     doc = storage.get_document(doc_id)
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Documento no encontrado")
-    # 🔓 TODO: tenancy (403 si es de otra empresa).
-    # 🔓 TODO: object-level — ¿dueño o admin? si NO → 403 ("No podés publicar este documento").
+    _ensure_same_tenant(doc, current_user)
+    if not _is_owner_or_admin(doc, current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No podés publicar este documento",
+        )
     return storage.set_document_published(doc_id, True)
