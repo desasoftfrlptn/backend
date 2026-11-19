@@ -102,11 +102,14 @@ def require_role(required: Role) -> Callable:
     def checker(
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ (reemplaza/envolvé el return de abajo):
-        #    if current_user.role != required:
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        # El rol sale del usuario recién leído de storage (no del token):
+        # si un admin lo cambia, el próximo request ya lo refleja.
+        # 403 y no 401: el usuario SÍ está autenticado, pero no le alcanza.
+        if current_user.role != required:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tenés el rol necesario para esta operación",
+            )
         return current_user
     return checker
 
@@ -141,12 +144,15 @@ def require_scope(required: str) -> Callable:
         request: Request,
         current_user: Annotated[User, Depends(get_current_user)],
     ) -> User:
-        # ─────────────────────────────────────────────────────────────
-        # 🔓 TU CÓDIGO ACÁ:
-        #    payload = request.state.token_payload
-        #    token_scope = payload.get("scope", "")
-        #    if required not in token_scope.split():
-        #        raise HTTPException(status_code=403, detail=...)
-        # ─────────────────────────────────────────────────────────────
+        # El scope es del TOKEN (lo fijó el login), por eso se lee del
+        # payload y no del usuario. split() evita que "write" matchee por
+        # substring dentro de otro scope (ej. "rewrite").
+        payload = request.state.token_payload
+        token_scope = payload.get("scope", "")
+        if required not in token_scope.split():
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="El token no tiene el scope necesario para esta operación",
+            )
         return current_user
     return checker
